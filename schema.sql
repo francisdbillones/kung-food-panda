@@ -1,5 +1,5 @@
-CREATE SCHEMA IF NOT EXISTS DBApp;
-USE DBApp;
+CREATE SCHEMA IF NOT EXISTS kungfoodpanda_db;
+USE kungfoodpanda_db;
 
 DROP TABLE IF EXISTS Subscription; 
 DROP TABLE IF EXISTS Orders;         
