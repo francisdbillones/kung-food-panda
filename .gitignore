@@ -1,4 +1,5 @@
 .idea/
+app/DBApp/.idea/
 *.DS_Store*
 app/DBApp/node_modules
 
