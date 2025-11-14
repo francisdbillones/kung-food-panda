@@ -1,5 +1,8 @@
 const knex = require('./knexfile')
 
+// INSERT
+exports.insertFProduct = (product) => knex('Inventory').insert(product)
+
 // VIEW
 exports.viewAllFProducts = () => knex('FarmProduct').select('*')
 exports.getFProductByProductID = (id) => knex('FarmProduct').where('product_id',id)
