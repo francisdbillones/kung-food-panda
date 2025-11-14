@@ -1,3 +1,4 @@
+*.DS_Store*
 app/DBApp/node_modules
 
 # Byte-compiled / optimized / DLL files
