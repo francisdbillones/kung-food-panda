@@ -1,0 +1,67 @@
+const farmProduct_model = require('../models/farmProduct')
+
+// 1. Create a FarmProduct
+exports.createFarmProduct = async (request, response) => {
+    try{
+        //assume request.body contains the farmProduct
+        const [newID] = await farmProduct_model.insertFProduct(request.body)
+        msg = {
+            line: "Farm Product created successfully",
+            farmProduct_id: newID,
+        }
+
+        response.status(201).json(msg)
+    }
+    catch (error){
+        console.error('Error creating Farm Product', error)
+        msg = {
+            line: "Farm Product creation failed",
+            error: error.message
+        }
+        response.status(500).json(msg)
+    }
+};
+// 2. Delete a FarmProduct
+exports.deleteClient = async (request, response) => {
+    try{
+        //assume request.params.id contains the product_id
+        const no_rows_affected = await farmProduct_model.deleteFProduct(request.params.farm_id, request.params.id)
+
+        if(no_rows_affected > 0)
+            response.status(204).send()
+        else
+            response.status(404).json(msg = {line: "Farm Product not found"})
+    }
+    catch (error){
+        console.error('Error deleting Farm Product', error)
+        msg = {
+            line: "Farm Product deletion failed",
+            error: error.message
+        }
+        response.status(500).json(msg)
+    }
+};
+
+// 3. Edit a FarmProduct's information
+exports.editFProduct = async (request, response) => {
+    try{
+        //assume request.params.product contains the farmProduct, request.body contains the updated value
+        const no_rows_affected = await farmProduct_model.updateFProduct(request.params.farm_id,
+            request.params.product, request.body)
+        msg = {
+            line: "Farm Product updated successfully",
+        }
+        if(no_rows_affected > 0)
+            response.status(200).json(msg)
+        else
+            response.status(404).json(msg = {line: "Farm Product not found"})
+    }
+    catch (error){
+        console.error('Error deleting Farm Product', error)
+        msg = {
+            line: "Farm Product deletion failed",
+            error: error.message
+        }
+        response.status(500).json(msg)
+    }
+};

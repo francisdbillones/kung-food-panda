@@ -6,7 +6,7 @@ exports.createClient = async (request, response) => {
         const [newID] = await client_model.insertClient(request.body)
         msg = {
             line: "Client created successfully",
-            farm_id: newID,
+            client_id: newID,
         }
 
         response.status(201).json(msg)
@@ -40,13 +40,16 @@ exports.deleteClient = async (request, response) => {
     }
 };
 
-// 3. Edit Client's company name
+// 3. Edit Client's information
 exports.editClient = async (request, response) => {
     try{
-        const no_rows_affected = await client_model.updateClient(request.params.request.body)
 
+        const no_rows_affected = await client_model.updateClient(request.params.id, request.body)
+        msg = {
+            line: "Client information updated successfully",
+        }
         if(no_rows_affected > 0)
-            response.status(204).send()
+            response.status(200).json(msg)
         else
             response.status(404).json(msg = {line: "Client not found"})
     }
@@ -60,14 +63,52 @@ exports.editClient = async (request, response) => {
     }
 };
 
-// 4. Edit Client's first name
-
-// 5. Edit Client's last name
-
-// 6. Edit Client's honorific
-
-// 7. Edit Client's email
-
-// 8. Edit Client's location ID
-
-// 9.    Edit Client's loyalty points
+// 4. View Client's information
+exports.viewClient = async (request, response) => {
+    try{
+        //assume request.type contains the filter of the viewing
+        //All means NO filter, else filter by the given type
+        if(request.type === 'All'){
+            const records = await client_model.viewAllClients()
+            msg = {
+                line: "Client information successfully fetched",
+                data: records
+            }
+            if(records.length > 0)
+                response.status(200).json(msg)
+            else
+                response.status(404).json(msg = {line: "No Client/s found"})
+        }
+        else if(request.type === 'ID'){
+            const records = await client_model.getClientByID(request.id)
+            msg = {
+                line: "Client information filtered by ID successfully fetched",
+                data: records
+            }
+            if(records.length > 0)
+                response.status(200).json(msg)
+            else
+                response.status(404).json(msg = {line: "No Client/s found"})
+        }
+        else if(request.type === 'Company'){
+            const records = await client_model.getClientByID(request.id)
+            msg = {
+                line: "Client information filtered by ID successfully fetched",
+                data: records
+            }
+            if(records.length > 0)
+                response.status(200).json(msg)
+            else
+                response.status(404).json(msg = {line: "No Client/s found"})
+        }
+        
+    }
+    catch (error){
+        console.error('Error deleting Client', error)
+        msg = {
+            line: "Client deletion failed",
+            error: error.message
+        }
+        response.status(500).json(msg)
+    }
+};
