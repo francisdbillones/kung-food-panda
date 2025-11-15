@@ -18,4 +18,4 @@ exports.updateBatch = (id, batch) => knex('Inventory').where('batch_id',id).upda
 
 // DELETE
 exports.deleteBatch = (id) => knex('Inventory').where('batch_id',id).del()
-exports.deleteExpired = (expDate) => knex('Inventory').where('exp_date',expDate).del()
+exports.deleteExpired = (expDate) => knex('Inventory').where('exp_date',expDate).delete()

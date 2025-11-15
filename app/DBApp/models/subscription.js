@@ -16,4 +16,4 @@ exports.getSubscriptionByLocation = (loc) => knex('Subscription').where('locatio
 exports.updateSubscription = (id, sub) => knex('Subscription').where('program_id',id).update(sub)
 
 // DELETE
-exports.deleteSubscription = (id) => knex('Subscription').where('program_id',id).del()
+exports.deleteSubscription = (id) => knex('Subscription').where('program_id',id).delete()

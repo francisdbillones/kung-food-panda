@@ -13,4 +13,4 @@ exports.getFProductByPKs = (id1, id2) => knex('FarmProduct').where('farm_id',id1
 exports.updateFProduct = (farm, product, value) => knex('FarmProduct').where('farm_id', farm).where('product_id',product).update(value)
 
 //DELETE
-exports.deleteFProduct = (id1, id2) => knex('FarmProduct').where('farm_id',id1).where('product_id', id2).del()
+exports.deleteFProduct = (id1, id2) => knex('FarmProduct').where('farm_id',id1).where('product_id', id2).delete()
