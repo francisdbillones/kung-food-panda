@@ -15,4 +15,4 @@ exports.getRProductBySeason = (s) => knex('RawProduct').where('start_date','>=',
 exports.updateRProduct = (id, rp) => knex('RawProduct').where('product_id',id).update(rp)
 
 // DELETE
-exports.deleteRProduct = (id) => knex('RawProduct').where('product_id',id).del()
+exports.deleteRProduct = (id) => knex('RawProduct').where('product_id',id).delete()

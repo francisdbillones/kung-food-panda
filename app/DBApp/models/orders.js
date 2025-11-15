@@ -14,4 +14,4 @@ exports.getInventoryByShippingStatus = (ship) => knex('Orders').where('is_shippe
 exports.getInventoryByQty = (qty) => knex('Orders').where('quantity',qty)
 
 // DELETE
-exports.deleteOrder = (id) => knex('Orders').where('order_id',id).del()
+exports.deleteOrder = (id) => knex('Orders').where('order_id',id).delete()

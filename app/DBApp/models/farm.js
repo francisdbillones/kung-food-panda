@@ -9,5 +9,5 @@ exports.getFarmsByID = (id) => knex('Farm').where('farm_id',id)
 exports.getFarmsByLocation = (id) => knex('Farm').where('location_id',id)
 
 // DELETE
-exports.deleteFarm = (id) => knex('Farm').where('farm_id',id).del()
-exports.deleteFarmByLocation = (id) => knex('Farm').where('location_id',id).del()
+exports.deleteFarm = (id) => knex('Farm').where('farm_id',id).delete()
+exports.deleteFarmByLocation = (id) => knex('Farm').where('location_id',id).delete()

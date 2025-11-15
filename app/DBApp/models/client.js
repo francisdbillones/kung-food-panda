@@ -18,4 +18,4 @@ exports.getClientByLoyaltyPts = (n) => knex('Client').where('loyalty_points',n)
 exports.updateClient = (id, cl) => knex('Client').where('client_id',id).update(cl)
 
 // DELETE
-exports.deleteClient = (id) => knex('Client').where('client_id',id).del()
+exports.deleteClient = (id) => knex('Client').where('client_id',id).delete()
