@@ -81,12 +81,14 @@ CREATE TABLE Orders (
     client_id INT UNSIGNED NOT NULL,
     batch_id INT UNSIGNED NOT NULL,
     location_id INT UNSIGNED NOT NULL,
-    order_date DATETIME NOT NULL,
+    order_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
     is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
+    due_by DATE NOT NULL,
 
     CHECK (is_shipped IN (0,1)),
     CHECK (quantity > 0),
+    CHECK (due_by >= order_date),
 
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),
@@ -98,6 +100,7 @@ CREATE TABLE Subscription (
     product_id INT UNSIGNED NOT NULL,
     client_id INT UNSIGNED NOT NULL,
     order_interval_days INT UNSIGNED NOT NULL,
+    start_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
     location_id INT UNSIGNED NOT NULL,
     
