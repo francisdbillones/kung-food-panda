@@ -23,14 +23,13 @@ CREATE TABLE RawProduct (
 	product_id INT UNSIGNED NOT NULL PRIMARY KEY,
     product_name VARCHAR (100) NOT NULL,
     product_type VARCHAR (100) NOT NULL,
-    grade VARCHAR (100) NOT NULL,
+    grade ENUM('SSR', 'SR', 'R', 'UC', 'C') NOT NULL,
     start_season DATE NOT NULL,
     end_season DATE NOT NULL,
 
     UNIQUE(product_name, grade),
 
-    CHECK (end_season > start_season),
-    CHECK (grade in ('SSR', 'SR', 'R', 'UC', 'C'))
+    CHECK (end_season > start_season)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Client (
@@ -38,12 +37,10 @@ CREATE TABLE Client (
     company_name VARCHAR (100),
     first_name VARCHAR (100) NOT NULL,
     last_name VARCHAR (100) NOT NULL,
-    honorific VARCHAR (20) NOT NULL DEFAULT 'Mx.',
+    honorific ENUM ('Mx.', 'Mr.', 'Mrs.', 'Ms.', 'Dr.') NOT NULL DEFAULT 'Mx.',
     email VARCHAR (100) NOT NULL UNIQUE,
     location_id INT UNSIGNED,
     loyalty_points INT UNSIGNED NOT NULL DEFAULT 0,
-
-    CHECK (honorific in ('Mx.', 'Mr.', 'Mrs.', 'Ms.', 'Dr.')),
 
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
 ) ENGINE=InnoDB;
