@@ -1,10 +1,10 @@
-const farmProductModel = require('../models/farmProduct')
+const fProductModel = require('../models/farmProduct')
 
 // 1. Create a FarmProduct
-exports.createFarmProduct = async (request, response) => {
+exports.createFProduct = async (request, response) => {
     try{
         //assume request.body contains the farmProduct
-        const [newID] = await farmProductModel.insertFProduct(request.body)
+        const [newID] = await fProductModel.insertFProduct(request.product)
         
         if(!newID){
             const msg = {line:"Error creating Farm Product", error:"Server did not return new ID"}
@@ -30,8 +30,8 @@ exports.createFarmProduct = async (request, response) => {
 // 2. Delete a FarmProduct
 exports.removeFProduct = async (request, response) => {
     try{
-        //assume request.id contains the product_id
-        const no_rows_affected = await farmProductModel.deleteFProduct(request.farm_id, request.id)
+        const no_rows_affected = await fProductModel.deleteFProduct(
+            request.farmID, request.productID)
 
         if(no_rows_affected > 0)
             return response.status(204).send()
@@ -51,9 +51,8 @@ exports.removeFProduct = async (request, response) => {
 // 3. Edit a FarmProduct's information
 exports.editFProduct = async (request, response) => {
     try{
-        //assume request.product contains the farmProduct, request.body contains the updated value
-        const no_rows_affected = await farmProductModel.updateFProduct(request.farm_id,
-            request.product, request.body)
+        const no_rows_affected = await fProductModel.updateFProduct(
+            request.farmID, request.productID, request.value)
         const msg = {
             line: "Farm Product updated successfully",
         }
@@ -75,8 +74,8 @@ exports.editFProduct = async (request, response) => {
 // 4. View a FarmProduct's information
 exports.viewFProduct = async (request, response) => {
     try{
-        if(request.type === "All"){
-            const records = await farmProductModel.viewAllFProducts()
+        if(request.filterBy === "All"){
+            const records = await fProductModel.viewAllFProducts()
             const msg = {
                 line: "All Farm Product information successfully fetched",
                 data: records
@@ -87,8 +86,8 @@ exports.viewFProduct = async (request, response) => {
             else
                 return response.status(404).json({line: "No Farm Product/s found"})
         }
-        else if(request.type === "ProductID"){
-            const records = await farmProductModel.getFProductByProductID(request.product_id)
+        else if(request.filterBy === "ProductID"){
+            const records = await fProductModel.getFProductByProductID(request.productID)
             const msg = {
                 line: "Farm Product information filtered by product ID successfully fetched",
                 data: records
@@ -99,8 +98,8 @@ exports.viewFProduct = async (request, response) => {
             else
                 return response.status(404).json({line: "No Farm Product/s found"})
         }
-        else if(request.type === "FarmID"){
-            const records = await farmProductModel.getFProductByProductID(request.farm_id)
+        else if(request.filterBy === "FarmID"){
+            const records = await fProductModel.getFProductByFarmID(request.farmID)
             const msg = {
                 line: "Farm Product information filtered by farm ID successfully fetched",
                 data: records
@@ -111,8 +110,9 @@ exports.viewFProduct = async (request, response) => {
             else
                 return response.status(404).json({line: "No Farm Product/s found"})
         }
-        else if(request.type === "PrimaryKeys"){
-            const records = await farmProductModel.getFProductByProductID(request.farm_id, request.product_id)
+        else if(request.filterBy === "PrimaryKeys"){
+            const records = await fProductModel.getFProductByPKs(
+                request.farmID, request.productID)
             const msg = {
                 line: "Farm Product information filtered by farm and product ID successfully fetched",
                 data: records
@@ -123,7 +123,7 @@ exports.viewFProduct = async (request, response) => {
             else
                 return response.status(404).json({line: "No Farm Product/s found"})
         }
-        //request.type is not valid
+        //request.filterBy is not valid
         else{
             return response.status(400).json({line:"Invalid filter/column"})
         }

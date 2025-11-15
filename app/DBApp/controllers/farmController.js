@@ -5,7 +5,7 @@ const farmModel = require('../models/farm')
 // Note: if creating a new farm, you must also create a new entry in farmProduct
 exports.createFarm = async (request, response) => {
     try{
-        const [newID] = await farmModel.insertFarm(request.body)
+        const [newID] = await farmModel.insertFarm(request.locationID)
         if(!newID){
             const msg = {line:"Error creating Farm", error:"Server did not return new ID"}
             return response.status(500).json(msg)
@@ -13,7 +13,7 @@ exports.createFarm = async (request, response) => {
 
         const msg = {
             line: "Farm created successfully",
-            farm_id: newID,
+            farmID: newID,
         }
 
         return response.status(201).json(msg)
@@ -31,12 +31,25 @@ exports.createFarm = async (request, response) => {
 // 2. Delete a Farm
 exports.removeFarm = async (request, response) => {
     try{
-        const no_rows_affected = await farmModel.deleteFarm(request.body)
+        if(request.filterBy === "FarmID"){
+            const no_rows_affected = await farmModel.deleteFarm(request.farmID)
 
-        if(no_rows_affected > 0)
-            response.status(204).send()
-        else
-            response.status(404).json({line: "Farm not found"})
+            if(no_rows_affected > 0)
+                response.status(204).send()
+            else
+                response.status(404).json({line: "Farm not found"})
+        }
+        else if(request.filterBy === "LocationID"){
+            const no_rows_affected = await farmModel.deleteFarmByLocation(request.locationID)
+
+            if(no_rows_affected > 0)
+                response.status(204).send()
+            else
+                response.status(404).json({line: "Farm not found"})
+        }
+        else{
+            return response.status(400).json({line:"Invalid filter/column"})
+        }
     }
     catch (error){
         console.error('Error deleting Farm', error)
@@ -51,9 +64,9 @@ exports.removeFarm = async (request, response) => {
 // 3. View a Farm's information
 exports.viewFarm = async (request, response) => {
     try{
-        //assume request.type contains the filter of the viewing
-        //All means NO filter, else filter by the given type
-        if(request.type === "All"){
+        //assume request.filterBy contains the filter of the viewing
+        //All means NO filter, else filter by the given filterBy
+        if(request.filterBy === "All"){
             const records = await farmModel.viewAllFarms()
             const msg = {
                 line: "All Farm information successfully fetched",
@@ -64,10 +77,10 @@ exports.viewFarm = async (request, response) => {
             else
                 return response.status(404).json({line: "No Farm/s found"})
         }
-        else if(request.type === "ID"){
-            const records = await farmModel.getFarmsByID(request.id)
+        else if(request.filterBy === "FarmID"){
+            const records = await farmModel.getFarmsByID(request.farmID)
             const msg = {
-                line: "Farm information filtered by ID successfully fetched",
+                line: "Farm information filtered by farm ID successfully fetched",
                 data: records
             }
             if(records.length > 0)
@@ -75,10 +88,10 @@ exports.viewFarm = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Farm/s found"})
         }
-        else if(request.type === "Location"){
-            const records = await farmModel.getFarmsByLocation(request.location)
+        else if(request.filterBy === "LocationID"){
+            const records = await farmModel.getFarmsByLocation(request.locationID)
             const msg = {
-                line: "Farm information filtered by location successfully fetched",
+                line: "Farm information filtered by location ID successfully fetched",
                 data: records
             }
             if(records.length > 0)
@@ -86,7 +99,7 @@ exports.viewFarm = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Farm/s found"})
         }
-        //request.type is not valid
+        //request.filterBy is not valid
         else{
             return response.status(400).json({line:"Invalid filter/column"})
         }

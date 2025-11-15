@@ -3,7 +3,7 @@ const locationModel = require('../models/location')
 // 1. Create new Location
 exports.createLocation = async (request, response) => {
     try{
-        const [newID] = await locationModel.insertLocation(request.body)
+        const [newID] = await locationModel.insertLocation(request.location)
         if(!newID){
             const msg = {
                 line:"Error creating Location", 
@@ -32,15 +32,15 @@ exports.createLocation = async (request, response) => {
 // 2. Delete a Location
 exports.removeLocation = async (request, response) => {
     try{
-        if(request.type === "ID"){
-            const no_rows_affected = await locationModel.deleteLocation(request.location_id)
+        if(request.filterBy === "ID"){
+            const no_rows_affected = await locationModel.deleteLocation(request.locationID)
 
             if(no_rows_affected > 0)
                 response.status(204).send()
             else
                 response.status(404).json({line: "Location not found"})
         }
-        else if(request.type === "Continent"){
+        else if(request.filterBy === "Continent"){
             const no_rows_affected = await locationModel.deleteLocationsByContinent(request.continent)
 
             if(no_rows_affected > 0)
@@ -48,7 +48,7 @@ exports.removeLocation = async (request, response) => {
             else
                 response.status(404).json({line: "Location not found"})
         }
-        else if(request.type === "Country"){
+        else if(request.filterBy === "Country"){
             const no_rows_affected = await locationModel.deleteLocationsByCountry(request.country, request.continent)
 
             if(no_rows_affected > 0)
@@ -56,7 +56,7 @@ exports.removeLocation = async (request, response) => {
             else
                 response.status(404).json({line: "Location not found"})
         }
-        else if(request.type === "State"){
+        else if(request.filterBy === "State"){
             const no_rows_affected = await locationModel.deleteLocationsByState(request.country, request.state)
 
             if(no_rows_affected > 0)
@@ -64,7 +64,7 @@ exports.removeLocation = async (request, response) => {
             else
                 response.status(404).json({line: "Location not found"})
         }
-        else if(request.type === "City"){
+        else if(request.filterBy === "City"){
             const no_rows_affected = await locationModel.deleteLocationsByCity(request.city, request.state, request.country)
 
             if(no_rows_affected > 0)
@@ -72,7 +72,7 @@ exports.removeLocation = async (request, response) => {
             else
                 response.status(404).json({line: "Location not found"})
         }
-        else if(request.type === "Street"){
+        else if(request.filterBy === "Street"){
             const no_rows_affected = await locationModel.deleteLocationsByStreet(request.country, request.state, request.city, request.street)
 
             if(no_rows_affected > 0)
@@ -81,7 +81,7 @@ exports.removeLocation = async (request, response) => {
                 response.status(404).json({line: "Location not found"})
         }
         else{
-            return response.status(400).json({line:"Invalid type"})
+            return response.status(400).json({line:"Invalid filterBy"})
         }
     }
     catch (error){
@@ -97,9 +97,9 @@ exports.removeLocation = async (request, response) => {
 // 3. View a Location's information
 exports.viewLocation = async (request, response) => {
     try{
-        //assume request.type contains the filter of the viewing
-        //All means NO filter, else filter by the given type
-        if(request.type === "All"){
+        //assume request.filterBy contains the filter of the viewing
+        //All means NO filter, else filter by the given filterBy
+        if(request.filterBy === "All"){
             const records = await locationModel.viewAllLocations()
             const msg = {
                 line: "All Location information successfully fetched",
@@ -110,7 +110,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json({line: "No Location/s found"})
         }
-        else if(request.type === "Continent"){
+        else if(request.filterBy === "Continent"){
             const records = await locationModel.getLocationsByContinent(request.continent)
             const msg = {
                 line: "Location information filtered by continent successfully fetched",
@@ -121,7 +121,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Location/s found"})
         }
-        else if(request.type === "Country"){
+        else if(request.filterBy === "Country"){
             const records = await locationModel.getLocationsByCountry(request.country)
             const msg = {
                 line: "Location information filtered by country successfully fetched",
@@ -132,7 +132,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Location/s found"})
         }
-        else if(request.type === "State"){
+        else if(request.filterBy === "State"){
             const records = await locationModel.getLocationsByState(request.state)
             const msg = {
                 line: "Location information filtered by state successfully fetched",
@@ -143,7 +143,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Location/s found"})
         }
-        else if(request.type === "City"){
+        else if(request.filterBy === "City"){
             const records = await locationModel.getLocationsByCity(request.city)
             const msg = {
                 line: "Location information filtered by city successfully fetched",
@@ -154,7 +154,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Location/s found"})
         }
-        else if(request.type === "Street"){
+        else if(request.filterBy === "Street"){
             const records = await locationModel.getLocationsByStreet(request.street)
             const msg = {
                 line: "Location information filtered by street successfully fetched",
@@ -165,7 +165,7 @@ exports.viewLocation = async (request, response) => {
             else
                 return response.status(404).json(msg = {line: "No Location/s found"})
         }
-        //request.type is not valid
+        //request.filterBy is not valid
         else{
             return response.status(400).json({line:"Invalid filter/column"})
         }

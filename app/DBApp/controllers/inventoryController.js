@@ -3,8 +3,7 @@ const inventoryModel = require('../models/inventory')
 // 1. Create a new batch in Inventory
 exports.createBatch = async(request, response) => {
     try{
-        //assume request.body contains information about the batch
-        const [newID] = await inventoryModel.insertBatch(request.body)
+        const [newID] = await inventoryModel.insertBatch(request.batch)
         msg = {
             line: "Batch created successfully",
             batchID: newID,
@@ -28,16 +27,15 @@ exports.createBatch = async(request, response) => {
 // 2. Delete a batch in Inventory
 exports.removeBatch = async(request, response) => {
     try{
-        if(request.type === "Not expired"){
-            //assume request.body contains information about the batch
-            const no_rows_affected = await inventoryModel.deleteBatch(request.id)
+        if(request.filterBy === "Not expired"){
+            const no_rows_affected = await inventoryModel.deleteBatch(request.batchID)
 
             if(no_rows_affected > 0)
                 return response.status(204).send()
             else
                 return response.status(404).json({line: "Batch not found"})
         }
-        else if(request.type === "Expired"){
+        else if(request.filterBy === "Expired"){
             //assume request.body contains information about the batch
             const no_rows_affected = await inventoryModel.deleteExpired(request.date)
 
@@ -47,7 +45,7 @@ exports.removeBatch = async(request, response) => {
                 return response.status(404).json({line: "Expired product/s not found"})
         }
         else{
-            return response.status(400).json({line:"Invalid type"})
+            return response.status(400).json({line:"Invalid filter/column"})
         }
     }
     catch (error){
@@ -64,30 +62,31 @@ exports.removeBatch = async(request, response) => {
 // 3. Update a batch's information in Inventory
 exports.editBatch = async (request, response) =>{
     try{
-            //assume request.batch contains the updated information about the batch
-            const no_rows_affected = await inventoryModel.updateBatch(request.batch)
-            const msg = {
-                line: "Farm Product updated successfully",
-            }
-            if(no_rows_affected > 0)
-                return response.status(200).json(msg)
-            else
-                return response.status(404).json({line: "Batch not found"})
+        //assume request.batch contains the updated information about the batch
+        const no_rows_affected = await inventoryModel.updateBatch(
+            request.batchID, request.batch)
+        const msg = {
+            line: "Batch updated successfully",
         }
-        catch (error){
-            console.error('Error updating batch', error)
-            const msg = {
-                line: "Batch update failed",
-                error: error.message
-            }
-            return response.status(500).json(msg)
+        if(no_rows_affected > 0)
+            return response.status(200).json(msg)
+        else
+            return response.status(404).json({line: "Batch not found"})
+    }
+    catch (error){
+        console.error('Error updating batch', error)
+        const msg = {
+            line: "Batch update failed",
+            error: error.message
         }
+        return response.status(500).json(msg)
+    }
 }
 
 // 4. View a batch's information in Inventory
 exports.viewInventory = async(request, response) =>{
     try{
-        if(request.type === "All"){
+        if(request.filterBy === "All"){
             const records = await inventoryModel.viewAllInventory()
             const msg = {
                 line: "All Inventory information successfully fetched",
@@ -99,10 +98,10 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Batch"){
+        else if(request.filterBy === "BatchID"){
             const records = await inventoryModel.getInventoryByBatch(request.batchID)
             const msg = {
-                line: "Inventory information filtered by batch successfully fetched",
+                line: "Inventory information filtered by batch ID successfully fetched",
                 data: records
             }
         
@@ -111,10 +110,10 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Product"){
-            const records = await inventoryModel.getInventoryByProduct(request.product)
+        else if(request.filterBy === "ProductID"){
+            const records = await inventoryModel.getInventoryByProduct(request.productID)
             const msg = {
-                line: "Inventory information filtered by product successfully fetched",
+                line: "Inventory information filtered by product ID successfully fetched",
                 data: records
             }
         
@@ -123,7 +122,7 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Farm ID"){
+        else if(request.filterBy === "FarmID"){
             const records = await inventoryModel.getInventoryByFarm(request.farmID)
             const msg = {
                 line: "Inventory information filtered by farm ID successfully fetched",
@@ -135,10 +134,11 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Price"){
-            const records = await inventoryModel.getInventoryByPrice(request.lowPrice, request.highPrice)
+        else if(request.filterBy === "Price"){
+            const records = await inventoryModel.getInventoryByPrice(
+                request.lowPrice, request.highPrice)
             const msg = {
-                line: "Inventory information filtered by price successfully fetched",
+                line: "Inventory information filtered by price range successfully fetched",
                 data: records
             }
         
@@ -147,7 +147,7 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Weight"){
+        else if(request.filterBy === "Weight"){
             const records = await inventoryModel.getInventoryByWeight(request.weight)
             const msg = {
                 line: "Inventory information filtered by weight successfully fetched",
@@ -159,7 +159,7 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Expiry Date"){
+        else if(request.filterBy === "ExpiryDate"){
             const records = await inventoryModel.getInventoryByExpDate(request.expiryDate)
             const msg = {
                 line: "Inventory information filtered by expiry date successfully fetched",
@@ -171,7 +171,7 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        else if(request.type === "Quantity"){
+        else if(request.filterBy === "Quantity"){
             const records = await inventoryModel.getInventoryByQty(request.quantity)
             const msg = {
                 line: "Inventory information filtered by quantity successfully fetched",
@@ -183,7 +183,7 @@ exports.viewInventory = async(request, response) =>{
             else
                 return response.status(404).json({line: "Nothing found in Inventory"})
         }
-        //request.type is not valid
+        //request.filterBy is not valid
         else{
             return response.status(400).json({line:"Invalid filter/column"})
         }
