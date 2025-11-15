@@ -85,6 +85,7 @@ CREATE TABLE Orders (
     quantity INT UNSIGNED NOT NULL,
     is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
     due_by DATE NOT NULL,
+    loyalty_points_used INT UNSIGNED DEFAULT 0,
 
     CHECK (is_shipped IN (0,1)),
     CHECK (quantity > 0),
