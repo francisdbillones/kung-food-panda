@@ -1,67 +1,139 @@
-const farmProduct_model = require('../models/farmProduct')
+const farmProductModel = require('../models/farmProduct')
 
 // 1. Create a FarmProduct
 exports.createFarmProduct = async (request, response) => {
     try{
         //assume request.body contains the farmProduct
-        const [newID] = await farmProduct_model.insertFProduct(request.body)
-        msg = {
-            line: "Farm Product created successfully",
-            farmProduct_id: newID,
+        const [newID] = await farmProductModel.insertFProduct(request.body)
+        
+        if(!newID){
+            const msg = {line:"Error creating Farm Product", error:"Server did not return new ID"}
+            return response.status(500).json(msg)
         }
 
-        response.status(201).json(msg)
+        const msg = {
+            line: "Farm Product created successfully",
+            farmProductID: newID,
+        }
+
+        return response.status(201).json(msg)
     }
     catch (error){
         console.error('Error creating Farm Product', error)
-        msg = {
+        const msg = {
             line: "Farm Product creation failed",
             error: error.message
         }
-        response.status(500).json(msg)
+        return response.status(500).json(msg)
     }
 };
 // 2. Delete a FarmProduct
-exports.deleteClient = async (request, response) => {
+exports.removeFProduct = async (request, response) => {
     try{
-        //assume request.params.id contains the product_id
-        const no_rows_affected = await farmProduct_model.deleteFProduct(request.params.farm_id, request.params.id)
+        //assume request.id contains the product_id
+        const no_rows_affected = await farmProductModel.deleteFProduct(request.farm_id, request.id)
 
         if(no_rows_affected > 0)
-            response.status(204).send()
+            return response.status(204).send()
         else
-            response.status(404).json(msg = {line: "Farm Product not found"})
+            return response.status(404).json({line: "Farm Product not found"})
     }
     catch (error){
         console.error('Error deleting Farm Product', error)
-        msg = {
+        const msg = {
             line: "Farm Product deletion failed",
             error: error.message
         }
-        response.status(500).json(msg)
+        return response.status(500).json(msg)
     }
 };
 
 // 3. Edit a FarmProduct's information
 exports.editFProduct = async (request, response) => {
     try{
-        //assume request.params.product contains the farmProduct, request.body contains the updated value
-        const no_rows_affected = await farmProduct_model.updateFProduct(request.params.farm_id,
-            request.params.product, request.body)
-        msg = {
+        //assume request.product contains the farmProduct, request.body contains the updated value
+        const no_rows_affected = await farmProductModel.updateFProduct(request.farm_id,
+            request.product, request.body)
+        const msg = {
             line: "Farm Product updated successfully",
         }
         if(no_rows_affected > 0)
-            response.status(200).json(msg)
+            return response.status(200).json(msg)
         else
-            response.status(404).json(msg = {line: "Farm Product not found"})
+            return response.status(404).json({line: "Farm Product not found"})
     }
     catch (error){
-        console.error('Error deleting Farm Product', error)
-        msg = {
-            line: "Farm Product deletion failed",
+        console.error('Error updating Farm Product', error)
+        const msg = {
+            line: "Farm Product update failed",
             error: error.message
         }
-        response.status(500).json(msg)
+        return response.status(500).json(msg)
+    }
+};
+
+// 4. View a FarmProduct's information
+exports.viewFProduct = async (request, response) => {
+    try{
+        if(request.type === "All"){
+            const records = await farmProductModel.viewAllFProducts()
+            const msg = {
+                line: "All Farm Product information successfully fetched",
+                data: records
+            }
+
+            if (records.length > 0)
+                return response.status(200).json(msg)
+            else
+                return response.status(404).json({line: "No Farm Product/s found"})
+        }
+        else if(request.type === "ProductID"){
+            const records = await farmProductModel.getFProductByProductID(request.product_id)
+            const msg = {
+                line: "Farm Product information filtered by product ID successfully fetched",
+                data: records
+            }
+
+            if (records.length > 0)
+                return response.status(200).json(msg)
+            else
+                return response.status(404).json({line: "No Farm Product/s found"})
+        }
+        else if(request.type === "FarmID"){
+            const records = await farmProductModel.getFProductByProductID(request.farm_id)
+            const msg = {
+                line: "Farm Product information filtered by farm ID successfully fetched",
+                data: records
+            }
+
+            if (records.length > 0)
+                return response.status(200).json(msg)
+            else
+                return response.status(404).json({line: "No Farm Product/s found"})
+        }
+        else if(request.type === "PrimaryKeys"){
+            const records = await farmProductModel.getFProductByProductID(request.farm_id, request.product_id)
+            const msg = {
+                line: "Farm Product information filtered by farm and product ID successfully fetched",
+                data: records
+            }
+
+            if (records.length > 0)
+                return response.status(200).json(msg)
+            else
+                return response.status(404).json({line: "No Farm Product/s found"})
+        }
+        //request.type is not valid
+        else{
+            return response.status(400).json({line:"Invalid filter/column"})
+        }
+    }
+    catch (error){
+        console.error('Error finding Farm Product/s', error)
+        const msg = {
+            line: "Farm Product/s could not be found",
+            error: error.message
+        }
+        return response.status(500).json(msg)
     }
 };
