@@ -70,7 +70,7 @@ CREATE TABLE Inventory (
     exp_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
 
-    CHECK (price > 0),
+    CHECK (price >= 0),
     CHECK (weight > 0),
 
     FOREIGN KEY (product_id, farm_id) REFERENCES FarmProduct(product_id, farm_id)
@@ -104,12 +104,14 @@ CREATE TABLE Subscription (
     start_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
     location_id INT UNSIGNED NOT NULL,
+    price DECIMAL(8, 2) NOT NULL DEFAULT 0.00,
     
     CHECK (quantity > 0),
     CHECK (order_interval_days > 0),
+    CHECK (price >= 0.00),
     UNIQUE (product_id, client_id),
 
     FOREIGN KEY (product_id) REFERENCES RawProduct(product_id),
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
-) ENGINE=InnoDB
+) ENGINE=InnoDB;
