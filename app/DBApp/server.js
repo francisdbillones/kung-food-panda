@@ -2297,7 +2297,7 @@ async function handleFarmerOfferingsDelete(request, response, productId) {
 async function serveStatic(pathname, response) {
   let relativePath = pathname
   if (relativePath === '/' || !relativePath) {
-    relativePath = '/login-customer.html'
+    relativePath = '/login.html'
   }
 
   const normalizedPath = path.normalize(relativePath).replace(/^[/\\]+/, '')

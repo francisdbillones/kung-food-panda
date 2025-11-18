@@ -334,7 +334,7 @@ async function loadCatalog() {
   try {
     const response = await fetch(ORDER_OPTIONS_ENDPOINT, { credentials: 'include' })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     if (!response.ok) {

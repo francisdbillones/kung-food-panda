@@ -2,7 +2,7 @@ const DASHBOARD_ENDPOINT = '/api/farmer/dashboard'
 const INVENTORY_ENDPOINT = '/api/farmer/inventory'
 const FULFILLMENT_ENDPOINT = '/api/farmer/fulfillments'
 const OFFERINGS_ENDPOINT = '/api/farmer/offerings'
-const LOGIN_FALLBACK = '/login-farmer.html'
+const LOGIN_FALLBACK = '/login.html#farmer'
 
 const selectors = {
   alerts: {

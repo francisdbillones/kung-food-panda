@@ -133,7 +133,7 @@ async function loadRequests() {
     setAlert('Loading subscription requests…', true)
     const response = await fetch(SUBSCRIPTIONS_ENDPOINT, { credentials: 'include' })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     if (!response.ok) {

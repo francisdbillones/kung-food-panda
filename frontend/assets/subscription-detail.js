@@ -234,7 +234,7 @@ async function createCustomLocation(payload) {
     body: JSON.stringify(payload)
   })
   if (response.status === 401) {
-    window.location.href = '/login-customer.html'
+    window.location.href = '/login.html#customer'
     return null
   }
   const data = await response.json().catch(() => ({}))
@@ -299,7 +299,7 @@ async function submitRequest(event) {
       body: JSON.stringify(payload)
     })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     const data = await response.json().catch(() => ({}))
@@ -330,7 +330,7 @@ async function loadOffers() {
     setAlert('Loading farms…', true)
     const response = await fetch(`${PRODUCT_OFFERS_ENDPOINT}?productId=${productId}`, { credentials: 'include' })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     if (!response.ok) {

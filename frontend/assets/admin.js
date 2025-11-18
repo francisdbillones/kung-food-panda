@@ -1,6 +1,6 @@
 const OVERVIEW_ENDPOINT = '/api/admin/overview'
 const ENTITY_ENDPOINT = '/api/admin/entities'
-const LOGIN_REDIRECT = '/login-admin.html'
+const LOGIN_REDIRECT = '/login.html#admin'
 
 const selectors = {
   alert: '[data-admin-alert]',

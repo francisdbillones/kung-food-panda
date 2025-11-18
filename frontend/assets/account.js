@@ -92,7 +92,7 @@ async function createLocation(payload) {
     body: JSON.stringify(payload)
   })
   if (response.status === 401) {
-    window.location.href = '/login-customer.html'
+    window.location.href = '/login.html#customer'
     return null
   }
   const data = await response.json().catch(() => ({}))
@@ -126,7 +126,7 @@ async function loadAccount() {
     setFeedback('Loading account…', true)
     const response = await fetch(ACCOUNT_ENDPOINT, { credentials: 'include' })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     if (!response.ok) {
@@ -160,7 +160,7 @@ async function handleSubmit(event) {
       body: JSON.stringify(payload)
     })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     const data = await response.json().catch(() => ({}))

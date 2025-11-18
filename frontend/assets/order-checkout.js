@@ -125,7 +125,7 @@ async function createCustomLocation(payload) {
     body: JSON.stringify(payload)
   })
   if (response.status === 401) {
-    window.location.href = '/login-customer.html'
+    window.location.href = '/login.html#customer'
     return null
   }
   const data = await response.json().catch(() => ({}))
@@ -195,7 +195,7 @@ async function handleSubmit(event) {
       body: JSON.stringify({ ...orderPayload, locationId })
     })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     const data = await response.json().catch(() => ({}))
@@ -217,7 +217,7 @@ async function loadBatch(batchId) {
     setAlert('Loading batch…', true)
     const response = await fetch(`${ORDER_BATCH_ENDPOINT}?batchId=${batchId}`, { credentials: 'include' })
     if (response.status === 401) {
-      window.location.href = '/login-customer.html'
+      window.location.href = '/login.html#customer'
       return
     }
     if (!response.ok) {
