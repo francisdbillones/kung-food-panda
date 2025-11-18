@@ -1337,8 +1337,8 @@ async function handleCreateSubscription(request, response) {
       sendJson(response, 400, { error: 'Invalid start date.' })
       return
     }
-    if (price == null || Number.isNaN(price) || price < 0) {
-      sendJson(response, 400, { error: 'A valid price is required.' })
+    if (price != null && (Number.isNaN(price) || price < 0)) {
+      sendJson(response, 400, { error: 'Price, if provided, must be zero or greater.' })
       return
     }
     const product = await knex('RawProduct').where('product_id', productId).first()
