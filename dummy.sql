@@ -1,25 +1,13 @@
-/*
--- ====================================================================
--- KUNG FOOD PANDA - DUMMY DATA SCRIPT
--- ====================================================================
--- This script populates the tables defined in the 'kungfoodpanda_db'
--- schema with sample data for testing and development.
---
--- It is designed to be re-runnable. It disables foreign key checks,
--- truncates all tables in reverse dependency order, and then
--- inserts new data in the correct dependency order.
--- ====================================================================
-*/
-
--- Select the database to use
+-- Use the target database
 USE kungfoodpanda_db;
 
--- Disable foreign key checks to allow truncation
-SET FOREIGN_KEY_CHECKS = 0;
+-- Disable foreign key checks to allow truncating tables in any order
+SET FOREIGN_KEY_CHECKS=0;
 
--- Truncate tables in reverse order of dependency to clear old data
-TRUNCATE TABLE Subscription;
+-- Truncate tables in reverse order of dependency (or any order, since checks are off)
+-- This clears all existing data and resets auto-incrementing primary keys
 TRUNCATE TABLE Orders;
+TRUNCATE TABLE Subscription;
 TRUNCATE TABLE Inventory;
 TRUNCATE TABLE FarmProduct;
 TRUNCATE TABLE Farm;
@@ -27,148 +15,127 @@ TRUNCATE TABLE Client;
 TRUNCATE TABLE RawProduct;
 TRUNCATE TABLE Location;
 
--- ====================================================================
--- 1. INSERT DATA: Location
--- (No dependencies)
--- ====================================================================
+--
+-- 1. Insert data into 'Location' (No dependencies)
+--
+INSERT INTO Location (location_id, continent, country, state, city, street) VALUES
+(101, 'Asia', 'Philippines', 'Metro Manila', 'Quezon City', '123 Aurora Blvd'),
+(102, 'Asia', 'Philippines', 'Batangas', 'Lipa', '456 JP Laurel Hwy'),
+(103, 'Asia', 'Philippines', 'Cavite', 'Tagaytay', '789 Aguinaldo Hwy'),
+(104, 'Asia', 'Philippines', 'Benguet', 'Baguio', '101 Session Road'),
+(105, 'Asia', 'Philippines', 'Davao del Sur', 'Davao City', '202 Durian St'),
+(106, 'North America', 'USA', 'California', 'San Francisco', '303 Market St'),
+(107, 'Europe', 'France', 'Île-de-France', 'Paris', '404 Rue de Rivoli'),
+(108, 'Asia', 'Japan', 'Tokyo', 'Shibuya', '505 Hachiko Square'),
+(109, 'Asia', 'Philippines', 'Cebu', 'Cebu City', '606 Mango Ave'),
+(110, 'Asia', 'Philippines', 'Laguna', 'Calamba', '707 Rizal St');
 
-INSERT INTO Location (location_id, continent, country, state, city, street)
-VALUES
-(1, 'North America', 'USA', 'California', 'San Francisco', '123 Market St'),
-(2, 'North America', 'USA', 'New York', 'New York', '456 Broadway'),
-(3, 'Asia', 'Japan', 'Tokyo', 'Shibuya', '789 Hachi St'),
-(4, 'Asia', 'Philippines', 'Metro Manila', 'Makati', '101 Ayala Ave'),
-(5, 'Europe', 'France', 'Paris', '7th Arrondissement', '20 Rue Cler'),
-(6, 'South America', 'Brazil', 'Rio de Janeiro', 'Copacabana', '300 Atlantica Ave'),
-(7, 'Europe', 'Germany', 'Berlin', 'Berlin', '55 Brandenburg Gate'),
-(8, 'Asia', 'Philippines', 'Davao', 'Davao City', '22 Durian Ave');
+--
+-- 2. Insert data into 'RawProduct' (No dependencies)
+--
+INSERT INTO RawProduct (product_id, product_name, product_type, grade, start_season, end_season) VALUES
+(201, 'Heirloom Tomato', 'Fruit', 'SSR', '2025-03-01', '2025-07-31'),
+(202, 'Hass Avocado', 'Fruit', 'SR', '2025-01-01', '2025-12-31'),
+(203, 'Organic Spinach', 'Vegetable', 'R', '2025-01-01', '2025-12-31'),
+(204, 'Atsuete Seeds', 'Spice', 'C', '2025-06-01', '2025-09-30'),
+(205, 'Carabao Mango', 'Fruit', 'SSR', '2025-04-01', '2025-08-31'),
+(206, 'Benguet Strawberry', 'Fruit', 'SR', '2025-11-01', '2026-02-28'),
+(207, 'Organic Kale', 'Vegetable', 'R', '2025-01-01', '2025-12-31'),
+(208, 'Siling Labuyo', 'Spice', 'SR', '2025-01-01', '2025-12-31'),
+(209, 'Arabica Coffee Beans', 'Bean', 'SSR', '2025-10-01', '2026-03-31'),
+(210, 'Davao Durian', 'Fruit', 'SR', '2025-08-01', '2025-11-30');
 
--- ====================================================================
--- 2. INSERT DATA: RawProduct
--- (No dependencies)
--- ====================================================================
+--
+-- 3. Insert data into 'Client' (Depends on Location)
+--
+INSERT INTO Client (client_id, company_name, first_name, last_name, honorific, email, location_id, loyalty_points) VALUES
+(301, 'The Corner Cafe', 'Maria', 'Dela Cruz', 'Ms.', 'maria@cornercafe.com', 101, 1500),
+(302, 'Green Grocers Inc.', 'John', 'Smith', 'Mr.', 'john@greengrocers.com', 106, 500),
+(303, 'Parisian Bistro', 'Amélie', 'Martin', 'Mx.', 'amelie@bistro.fr', 107, 2200),
+(304, 'Tokyo Fresh Sushi', 'Kenji', 'Watanabe', 'Mr.', 'kenji@sushi.jp', 108, 800),
+(305, NULL, 'Alice', 'Johnson', 'Dr.', 'alice.j@research.edu', 106, 0),
+(306, 'Manila Hotel', 'Antonio', 'Luna', 'Mr.', 'aluna@manilahotel.com', 101, 10000),
+(307, 'Cebu Lechon House', 'Reyna', 'Mercado', 'Mrs.', 'reyna@lechon.com', 109, 350),
+(308, 'Baguio Good Shepherd', 'Christina', 'Reyes', 'Ms.', 'creyes@goodshepherd.ph', 104, 120),
+(309, 'Healthy Options', 'Mark', 'Lim', 'Mr.', 'mark.lim@healthyoptions.ph', 101, 5000),
+(310, 'Davao Agri Exports', 'Rodrigo', 'Bautista', 'Mr.', 'rbautista@davaofruits.com', 105, 450);
 
-INSERT INTO RawProduct (product_id, product_name, product_type, grade, start_season, end_season)
-VALUES
-(1, 'Golden Apple', 'Fruit', 'SSR', '2025-09-01', '2025-11-30'),
-(2, 'Blueberry', 'Fruit', 'SR', '2025-06-01', '2025-08-31'),
-(3, 'Wagyu Beef', 'Meat', 'SSR', '2025-01-01', '2025-12-31'),
-(4, 'King Salmon', 'Seafood', 'SR', '2025-05-01', '2025-07-31'),
-(5, 'Common Potato', 'Vegetable', 'C', '2025-01-01', '2025-12-31'),
-(6, 'Black Truffle', 'Fungi', 'SSR', '2025-10-01', '2025-12-31'),
-(7, 'Hass Avocado', 'Fruit', 'R', '2025-02-01', '2025-09-30'),
-(8, 'Mango', 'Fruit', 'SR', '2025-04-01', '2025-07-31');
+--
+-- 4. Insert data into 'Farm' (Depends on Location)
+--
+INSERT INTO Farm (farm_id, name, location_id) VALUES
+(401, 'Lipa Fresh Farms', 102),
+(402, 'Tagaytay Organics', 103),
+(403, 'Baguio Highland Greens', 104),
+(404, 'Davao Fruit Kings', 105),
+(405, 'Calamba Herbal Farm', 110),
+(406, 'Batangas Free Range', 102),
+(407, 'Cebu Tropical Fruits', 109),
+(408, 'Laguna Fields', 110),
+(409, 'Mindanao Cacao', 105),
+(410, 'Quezon Coconut Groves', 101);
 
--- ====================================================================
--- 3. INSERT DATA: Client
--- (Depends on Location)
--- ====================================================================
+--
+-- 5. Insert data into 'FarmProduct' (Depends on RawProduct, Farm)
+-- (This table links which farms grow which products)
+--
+INSERT INTO FarmProduct (product_id, farm_id, population, population_unit) VALUES
+(201, 401, 5000, 'plants'),
+(202, 402, 2000, 'trees'),
+(203, 403, 10, 'hectares'),
+(205, 407, 1500, 'trees'),
+(206, 403, 5, 'hectares'),
+(207, 402, 8, 'hectares'),
+(208, 401, 3000, 'plants'),
+(209, 403, 10000, 'plants'),
+(210, 404, 500, 'trees'),
+(201, 402, 2000, 'plants'); -- Farm 402 also grows Tomatoes
 
-INSERT INTO Client (client_id, company_name, first_name, last_name, honorific, email, location_id, loyalty_points)
-VALUES
-(1, 'Gourmet Inc.', 'Alice', 'Smith', 'Ms.', 'alice@gourmet.com', 1, 150),
-(2, 'Fine Foods Ltd.', 'Bob', 'Johnson', 'Mr.', 'bob@ffl.com', 2, 50),
-(3, 'Tokyo Eats', 'Kenji', 'Watanabe', 'Mr.', 'kenji@tokyoeats.jp', 3, 1000),
-(4, NULL, 'Maria', 'Clara', 'Mx.', 'mclara@email.ph', 4, 0),
-(5, 'Le Bistro', 'Chloe', 'Dubois', 'Dr.', 'chloe.dubois@lebistro.fr', 5, 220),
-(6, 'Berlin Butcher', 'Hans', 'Muller', 'Mr.', 'hans@berlinbutcher.de', 7, 75);
+--
+-- 6. Insert data into 'Inventory' (Depends on FarmProduct)
+-- (Batches of harvested products)
+--
+INSERT INTO Inventory (batch_id, product_id, farm_id, price, weight, notes, exp_date, quantity) VALUES
+(NULL, 201, 401, 150.00, 1.00, 'Batch A, ripe', '2025-11-30', 100),
+(NULL, 202, 402, 80.50, 0.50, 'Slightly hard, grade SR', '2025-12-10', 500),
+(NULL, 203, 403, 200.00, 1.00, 'Freshly picked, triple-washed', '2025-11-25', 200),
+(NULL, 205, 407, 120.00, 1.00, 'Sweet and fragrant', '2025-12-05', 1000),
+(NULL, 206, 403, 400.00, 1.00, 'Small but sweet', '2025-11-28', 300),
+(NULL, 207, 402, 250.00, 1.00, 'Organic Kale, Grade R', '2025-11-26', 150),
+(NULL, 208, 401, 300.00, 1.00, 'Very spicy', '2025-12-15', 50),
+(NULL, 209, 403, 800.00, 1.00, 'Kibungan beans, sun-dried', '2026-11-18', 200),
+(NULL, 210, 404, 180.00, 1.00, 'Puyat variety', '2025-11-30', 400),
+(NULL, 201, 402, 160.00, 1.00, 'Tagaytay tomatoes, greenhouse grown', '2025-12-02', 250);
 
--- ====================================================================
--- 4. INSERT DATA: Farm
--- (Depends on Location)
--- ====================================================================
+--
+-- 7. Insert data into 'Subscription' (Depends on FarmProduct, Client, Location)
+--
+INSERT INTO Subscription (program_id, product_id, farm_id, client_id, order_interval_days, start_date, quantity, location_id, price, status) VALUES
+(NULL, 201, 401, 301, 7, '2025-12-01', 10, 101, 145.00, 'ACTIVE'),
+(NULL, 202, 402, 301, 14, '2025-12-01', 20, 101, 80.00, 'ACTIVE'),
+(NULL, 203, 403, 309, 7, '2025-11-20', 50, 101, 190.00, 'QUOTED'),
+(NULL, 207, 402, 309, 7, '2025-11-20', 30, 101, NULL, 'AWAITING_QUOTE'),
+(NULL, 205, 407, 307, 3, '2025-12-05', 100, 109, 110.00, 'ACTIVE'),
+(NULL, 209, 403, 303, 30, '2026-01-01', 50, 107, 750.00, 'QUOTED'),
+(NULL, 210, 404, 310, 14, '2025-11-25', 200, 105, 170.00, 'ACTIVE'),
+(NULL, 206, 403, 308, 1, '2025-11-20', 50, 104, 380.00, 'ACTIVE'),
+(NULL, 201, 401, 302, 30, '2025-12-15', 30, 106, 150.00, 'CANCELLED'),
+(NULL, 208, 401, 306, 14, '2025-12-01', 5, 101, NULL, 'AWAITING_QUOTE');
 
-INSERT INTO Farm (farm_id, location_id)
-VALUES
-(1, 1), -- 'Sunrise Acres' in San Francisco
-(2, 3), -- 'Fuji Orchards' in Tokyo
-(3, 8), -- 'Davao Harvest' in Davao City, PH
-(4, 6), -- 'Amazonica Produce' in Brazil
-(5, 5); -- 'Parisian Pastures' in Paris
-
--- ====================================================================
--- 5. INSERT DATA: FarmProduct
--- (Depends on RawProduct, Farm)
--- ====================================================================
-
-INSERT INTO FarmProduct (product_id, farm_id, population)
-VALUES
-(1, 1, 10000), -- Farm 1 (SF) grows Golden Apples
-(2, 1, 50000), -- Farm 1 (SF) grows Blueberries
-(7, 1, 20000), -- Farm 1 (SF) grows Hass Avocados
-(1, 2, 8000),  -- Farm 2 (Tokyo) grows Golden Apples
-(3, 2, 500),   -- Farm 2 (Tokyo) grows Wagyu Beef
-(8, 3, 100000), -- Farm 3 (Davao) grows Mangos
-(5, 3, 50000), -- Farm 3 (Davao) grows Common Potatoes
-(6, 4, 100),   -- Farm 4 (Brazil) grows Black Truffles
-(3, 5, 200);   -- Farm 5 (Paris) grows "Wagyu" (for comparison)
-
--- ====================================================================
--- 6. INSERT DATA: Inventory
--- (Depends on FarmProduct)
--- Note: AUTO_INCREMENT on batch_id is handled by MySQL
--- ====================================================================
-
-INSERT INTO Inventory (product_id, farm_id, price, weight, notes, exp_date, quantity)
-VALUES
--- Batch 1
-(1, 1, 5.00, 0.2, 'Prime batch, perfectly ripe', '2025-12-15', 500), 
--- Batch 2
-(2, 1, 3.50, 0.01, 'Freshly picked this morning', '2025-12-01', 2000),
--- Batch 3
-(3, 2, 150.00, 1.0, 'A5 Grade, Certificate #A5-882', '2025-11-30', 50),
--- Batch 4
-(8, 3, 2.00, 0.3, 'Sweetest batch of the year', '2025-12-05', 5000),
--- Batch 5
-(5, 3, 0.50, 0.1, 'Good for frying', '2026-03-01', 10000),
--- Batch 6
-(6, 4, 300.00, 0.05, 'Highly aromatic', '2025-11-25', 40),
--- Batch 7
-(1, 1, 4.50, 0.19, 'Slightly bruised, 10% discount', '2025-12-10', 200);
-
--- ====================================================================
--- 7. INSERT DATA: Orders
--- (Depends on Client, Inventory, Location)
--- Note: AUTO_INCREMENT on order_id is handled by MySQL
--- ====================================================================
-
-INSERT INTO Orders (client_id, batch_id, location_id, order_date, quantity, is_shipped, due_by, loyalty_points_used)
-VALUES
--- Order 1: Alice (Client 1) orders Batch 1 (Apples) to Location 1 (SF). Shipped.
-(1, 1, 1, '2025-11-10', 50, 1, '2025-11-15', 50),
--- Order 2: Bob (Client 2) orders Batch 3 (Wagyu) to Location 2 (NY). Shipped.
-(2, 3, 2, '2025-11-11', 5, 1, '2025-11-20', 0),
--- Order 3: Kenji (Client 3) orders Batch 2 (Blueberries) to Location 3 (Tokyo). Not shipped.
-(3, 2, 3, '2025-11-12', 1000, 0, '2025-11-25', 100),
--- Order 4: Maria (Client 4) orders Batch 4 (Mangos) to Location 4 (Makati). Not shipped.
-(4, 4, 4, '2025-11-15', 200, 0, '2025-11-30', 0),
--- Order 5: Alice (Client 1) orders Batch 5 (Potatoes) to Location 1 (SF). Not shipped.
-(1, 5, 1, '2025-11-16', 500, 0, '2025-12-01', 0),
--- Order 6: Hans (Client 6) orders Batch 3 (Wagyu) to Location 7 (Berlin). Shipped.
-(6, 3, 7, '2025-11-16', 10, 1, '2025-11-22', 75);
-
--- ====================================================================
--- 8. INSERT DATA: Subscription
--- (Depends on FarmProduct, Client, Location)
--- Note: AUTO_INCREMENT on program_id is handled by MySQL
--- ====================================================================
-
-INSERT INTO Subscription (product_id, farm_id, client_id, order_interval_days, start_date, quantity, location_id, price, status)
-VALUES
--- Sub 1: Client 1 (Alice) gets 100 Golden Apples (Prod 1, Farm 1) every 30 days to Location 1. ACTIVE.
-(1, 1, 1, 30, '2025-10-01', 100, 1, 475.00, 'ACTIVE'),
--- Sub 2: Client 2 (Bob) wants 10 Wagyu (Prod 3, Farm 2) every 14 days to Location 2. QUOTED.
-(3, 2, 2, 14, '2025-11-01', 10, 2, 1450.00, 'QUOTED'),
--- Sub 3: Client 4 (Maria) wants 1000 Potatoes (Prod 5, Farm 3) weekly to Location 4. AWAITING_QUOTE.
-(5, 3, 4, 7, '2025-11-15', 1000, 4, NULL, 'AWAITING_QUOTE'),
--- Sub 4: Client 3 (Kenji) HAD a sub for Apples (Prod 1, Farm 2). CANCELLED.
-(1, 2, 3, 90, '2025-08-01', 20, 3, NULL, 'CANCELLED'),
--- Sub 5: Client 5 (Chloe) gets Avocados (Prod 7, Farm 1) every 15 days to Location 5. ACTIVE.
-(7, 1, 5, 15, '2025-09-15', 50, 5, 100.00, 'ACTIVE');
+--
+-- 8. Insert data into 'Orders' (Depends on Client, Inventory, Location, Subscription)
+--
+INSERT INTO Orders (order_id, client_id, batch_id, location_id, order_date, quantity, is_shipped, due_by, loyalty_points_used, program_id) VALUES
+(NULL, 301, 1, 101, '2025-11-18', 10, 0, '2025-11-20', 100, 1),
+(NULL, 309, 3, 101, '2025-11-18', 50, 0, '2025-11-21', 0, 3),
+(NULL, 302, 2, 106, '2025-11-17', 200, 1, '2025-11-19', 500, NULL),
+(NULL, 307, 4, 109, '2025-11-18', 300, 0, '2025-11-25', 0, NULL),
+(NULL, 308, 5, 104, '2025-11-18', 50, 1, '2025-11-18', 0, 8),
+(NULL, 310, 9, 105, '2025-11-16', 100, 1, '2025-11-20', 200, 7),
+(NULL, 303, 8, 107, '2025-11-15', 20, 1, '2025-11-30', 0, NULL),
+(NULL, 306, 7, 101, '2025-11-18', 5, 0, '2025-11-19', 0, NULL),
+(NULL, 301, 10, 101, '2025-11-18', 15, 0, '2025-11-21', 0, NULL),
+(NULL, 309, 6, 101, '2025-11-17', 40, 1, '2025-11-19', 1000, NULL);
 
 -- Re-enable foreign key checks
-SET FOREIGN_KEY_CHECKS = 1;
-
--- ====================================================================
--- SCRIPT COMPLETE
--- ====================================================================
+SET FOREIGN_KEY_CHECKS=1;

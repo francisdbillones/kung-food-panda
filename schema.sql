@@ -1,8 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS kungfoodpanda_db;
 USE kungfoodpanda_db;
 
+DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Subscription; 
-DROP TABLE IF EXISTS Orders;         
 DROP TABLE IF EXISTS Inventory;      
 DROP TABLE IF EXISTS FarmProduct;    
 DROP TABLE IF EXISTS Farm;
@@ -47,6 +47,7 @@ CREATE TABLE Client (
 
 CREATE TABLE Farm ( 
 	farm_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
     location_id INT UNSIGNED NOT NULL,
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
 ) ENGINE=InnoDB;
@@ -77,28 +78,6 @@ CREATE TABLE Inventory (
     FOREIGN KEY (product_id, farm_id) REFERENCES FarmProduct(product_id, farm_id)
 ) ENGINE=InnoDB;
 
-CREATE TABLE Orders (
-	order_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    client_id INT UNSIGNED NOT NULL,
-    batch_id INT UNSIGNED NOT NULL,
-    location_id INT UNSIGNED NOT NULL,
-    order_date DATE NOT NULL,
-    quantity INT UNSIGNED NOT NULL,
-    is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
-    due_by DATE NOT NULL,
-    loyalty_points_used INT UNSIGNED DEFAULT 0,
-    program_id INT UNSIGNED DEFAULT NULL,
-
-    CHECK (is_shipped IN (0,1)),
-    CHECK (quantity > 0),
-    CHECK (due_by >= order_date),
-
-    FOREIGN KEY (client_id) REFERENCES Client(client_id),
-    FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),
-    FOREIGN KEY (location_id) REFERENCES Location(location_id),
-    FOREIGN KEY (program_id) REFERENCES Subscription(program_id)
-) ENGINE=InnoDB;
-
 CREATE TABLE Subscription (
 	program_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
@@ -123,4 +102,26 @@ CREATE TABLE Subscription (
     FOREIGN KEY (product_id, farm_id) REFERENCES FarmProduct(product_id, farm_id),
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE Orders (
+	order_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    client_id INT UNSIGNED NOT NULL,
+    batch_id INT UNSIGNED NOT NULL,
+    location_id INT UNSIGNED NOT NULL,
+    order_date DATE NOT NULL,
+    quantity INT UNSIGNED NOT NULL,
+    is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
+    due_by DATE NOT NULL,
+    loyalty_points_used INT UNSIGNED DEFAULT 0,
+    program_id INT UNSIGNED DEFAULT NULL,
+
+    CHECK (is_shipped IN (0,1)),
+    CHECK (quantity > 0),
+    CHECK (due_by >= order_date),
+
+    FOREIGN KEY (client_id) REFERENCES Client(client_id),
+    FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),
+    FOREIGN KEY (location_id) REFERENCES Location(location_id),
+    FOREIGN KEY (program_id) REFERENCES Subscription(program_id)
 ) ENGINE=InnoDB;
