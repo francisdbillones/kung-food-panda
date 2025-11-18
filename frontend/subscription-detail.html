@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Quote · Kung Food Panda</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/subscription-detail.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">Kung Food Panda</div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a href="customer-order.html">Make Order</a>
+        <a class="active" href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <a class="button outline" href="customer-subscribe.html">← Back to catalog</a>
+      <h1 data-product-name>Subscription detail</h1>
+      <p class="subtitle" data-product-description>Loading product data…</p>
+      <p><small>Season window:</small> <strong data-product-season>—</strong></p>
+      <div class="form-feedback" data-detail-alert role="alert"></div>
+    </section>
+
+    <section class="card">
+      <h2>Farms accepting requests</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Farm</th>
+              <th>Location</th>
+              <th>Price signal</th>
+              <th>Inventory</th>
+              <th>Schedules</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody data-offer-rows></tbody>
+        </table>
+      </div>
+      <p class="subtitle" data-offer-empty hidden>No farms are advertising this product yet.</p>
+    </section>
+
+    <section class="card">
+      <h2>Request a quote</h2>
+      <p class="subtitle" data-selection-status>Select a farm above to continue.</p>
+      <form data-subscribe-form>
+        <input type="hidden" name="productId" data-input-product>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <div class="form-group">
+            <label>Selected farm</label>
+            <input type="text" data-selected-farm readonly placeholder="Pick a farm above">
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <div class="form-group">
+            <label for="subscribeSchedule">Delivery schedule</label>
+            <select id="subscribeSchedule" name="intervalDays" data-select-schedule required disabled>
+              <option value="">Choose a farm first</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="subscribeQuantity">Quantity per delivery</label>
+            <input id="subscribeQuantity" name="quantity" type="number" min="1" value="1" required disabled>
+          </div>
+          <div class="form-group">
+            <label for="subscribeStart">Preferred start date</label>
+            <input id="subscribeStart" name="startDate" type="date" required disabled>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1rem;">
+          <h3>Delivery address</h3>
+          <p class="subtitle">Use your default address or send this subscription elsewhere.</p>
+          <label style="display:block; margin-bottom:0.35rem;">
+            <input type="radio" name="addressMode" value="default" data-location-option checked>
+            Keep default address (<span data-default-location>Loading…</span>)
+          </label>
+          <label style="display:block;">
+            <input type="radio" name="addressMode" value="custom" data-location-option>
+            Enter custom address
+          </label>
+          <div class="grid" data-custom-location-fields hidden style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:1rem;">
+            <div class="form-group">
+              <label for="customStreet">Street</label>
+              <input id="customStreet" data-custom-street type="text" placeholder="House/Street" disabled>
+            </div>
+            <div class="form-group">
+              <label for="customCity">City</label>
+              <input id="customCity" data-custom-city type="text" placeholder="City/Town" disabled>
+            </div>
+            <div class="form-group">
+              <label for="customState">State/Province</label>
+              <input id="customState" data-custom-state type="text" placeholder="Optional" disabled>
+            </div>
+            <div class="form-group">
+              <label for="customCountry">Country</label>
+              <input id="customCountry" data-custom-country type="text" value="Philippines" disabled>
+            </div>
+          </div>
+        </div>
+
+        <button class="button" type="submit" disabled>Submit quote request</button>
+        <div class="form-feedback" data-form-feedback role="alert"></div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

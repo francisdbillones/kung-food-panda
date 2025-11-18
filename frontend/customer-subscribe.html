@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions · Atelier du Flavour</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/subscriptions.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
+      </div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a href="customer-order.html">Make Order</a>
+        <a class="active" href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+        <div>
+          <h1>Subscription requests</h1>
+          <p class="subtitle">Track the status of every quote request and active subscription tied to your account.</p>
+        </div>
+        <a class="button" href="subscription-request.html">+ Request subscription</a>
+      </div>
+      <div class="table-wrapper" style="margin-top:1.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Farm / Location</th>
+              <th>Cadence</th>
+              <th>Quantity</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th>Next delivery</th>
+            </tr>
+          </thead>
+          <tbody data-request-rows></tbody>
+        </table>
+      </div>
+      <p class="subtitle" data-requests-empty hidden>No subscription requests yet. Click “Request subscription” to start.</p>
+      <div class="form-feedback" data-subscription-alert role="alert"></div>
+    </section>
+
+    <section class="card">
+      <h2>Summary</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Total requests</td>
+            <td data-summary-total>—</td>
+          </tr>
+          <tr>
+            <td>Active programs</td>
+            <td data-summary-active>—</td>
+          </tr>
+          <tr>
+            <td>Awaiting quotes</td>
+            <td data-summary-awaiting>—</td>
+          </tr>
+          <tr>
+            <td>Next delivery</td>
+            <td data-billing-next>—</td>
+          </tr>
+          <tr>
+            <td>Default delivery</td>
+            <td data-customer-location>Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

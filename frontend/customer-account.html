@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Management · Atelier du Flavour</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/account.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
+      </div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a class="active" href="customer-account.html">Account</a>
+        <a href="customer-order.html">Make Order</a>
+        <a href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h1>Account settings</h1>
+      <p class="subtitle">Keep your delivery addresses, payment defaults, and dietary preferences up-to-date.</p>
+      <form>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <div class="form-group">
+            <label for="customerId">Customer ID</label>
+            <input id="customerId" data-field="clientId" readonly>
+          </div>
+          <div class="form-group">
+            <label for="loyalty">Loyalty points</label>
+            <input id="loyalty" data-field="loyaltyPoints" readonly>
+          </div>
+          <div class="form-group">
+            <label for="companyName">Company name</label>
+            <input id="companyName" data-field="companyName" type="text" placeholder="Optional">
+          </div>
+          <div class="form-group">
+            <label for="honorific">Honorific</label>
+            <select id="honorific" data-field="honorific">
+              <option value="Mx.">Mx.</option>
+              <option value="Mr.">Mr.</option>
+              <option value="Ms.">Ms.</option>
+              <option value="Mrs.">Mrs.</option>
+              <option value="Dr.">Dr.</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="firstName">First name</label>
+            <input id="firstName" data-field="firstName" type="text">
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last name</label>
+            <input id="lastName" data-field="lastName" type="text">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" data-field="email" type="email">
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1.5rem;">
+          <h3>Delivery address</h3>
+          <p class="subtitle">Use your stored location or switch to a custom one.</p>
+          <label style="display:block; margin-bottom:0.35rem;">
+            <input type="radio" name="addressMode" value="default" data-account-location-option checked>
+            Keep default address (<span data-account-location-label>Loading…</span>)
+          </label>
+          <label style="display:block;">
+            <input type="radio" name="addressMode" value="custom" data-account-location-option>
+            Enter custom address
+          </label>
+          <div class="grid" data-account-custom-fields hidden style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:1rem;">
+            <div class="form-group">
+              <label for="customStreet">Street</label>
+              <input id="customStreet" data-account-street type="text" placeholder="House/Street">
+            </div>
+            <div class="form-group">
+              <label for="customCity">City</label>
+              <input id="customCity" data-account-city type="text" placeholder="City/Town">
+            </div>
+            <div class="form-group">
+              <label for="customState">State/Province</label>
+              <input id="customState" data-account-state type="text" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label for="customCountry">Country</label>
+              <input id="customCountry" data-account-country type="text" value="Philippines">
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-actions" style="margin-top:1.5rem;">
+          <button class="button outline" type="button" data-account-reset>Reset</button>
+          <button class="button" type="submit">Save changes</button>
+        </div>
+        <div class="form-feedback" data-account-feedback role="alert"></div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

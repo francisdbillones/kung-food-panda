@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard · Atelier du Flavour</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/dashboard.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
+      </div>
+      <nav>
+        <a class="active" href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a href="customer-order.html">Make Order</a>
+        <a href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h1>Hi, <span data-customer-name>there</span>!</h1>
+      <p class="subtitle">Your on-demand orders, subscriptions, and loyalty perks update live from the database.</p>
+      <div class="quick-actions">
+        <a class="button" href="customer-order.html">+ New on-demand order</a>
+        <a class="button secondary" href="customer-subscribe.html">Browse subscriptions</a>
+        <a class="button outline" href="customer-account.html">Update account</a>
+      </div>
+      <div class="form-feedback" data-dashboard-alert role="alert"></div>
+    </section>
+
+    <section class="grid dashboard-grid">
+      <div class="card">
+        <h2>Pending orders</h2>
+        <small data-pending-count>Loading pending orders…</small>
+        <div class="grid" style="margin-top:1rem; gap:1rem;" data-pending-orders></div>
+        <p class="subtitle" data-pending-empty hidden>No pending orders at the moment.</p>
+      </div>
+
+      <div class="card">
+        <h2>Active subscriptions</h2>
+        <small data-subscription-count>Loading subscriptions…</small>
+        <div class="grid" style="margin-top:1rem; gap:1rem;" data-subscriptions></div>
+        <p class="subtitle" data-subscriptions-empty hidden>No active subscriptions yet.</p>
+        <a class="button outline" href="customer-subscribe.html" style="margin-top:1rem;">Manage subscriptions</a>
+      </div>
+
+      <div class="card">
+        <h2>Loyalty & rewards</h2>
+        <div class="loyalty-banner">
+          <div>
+            <small>Available points</small>
+            <strong data-loyalty-points>0 pts</strong>
+            <p>Redeem up to <span data-loyalty-value>₱0.00</span> on your next order.</p>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <small>Last refreshed</small>
+          <p data-loyalty-refreshed>—</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent activity</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody data-recent-orders></tbody>
+        </table>
+      </div>
+      <p class="subtitle" data-recent-empty hidden>No recent orders recorded.</p>
+    </section>
+  </main>
+</body>
+</html>

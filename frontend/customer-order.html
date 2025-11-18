@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make an Order · Kung Food Panda</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/order.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
+      </div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a class="active" href="customer-order.html">Make Order</a>
+        <a href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h1>On-demand inventory</h1>
+          <p class="subtitle">Browse live batches from every farm. Filter by product, farm, or price, then request checkout.</p>
+        </div>
+        <div class="loyalty-banner" style="flex:0 0 auto;">
+          <div>
+            <small>Loyalty balance</small>
+            <strong data-loyalty-balance>0 pts</strong>
+            <p style="margin:0;">Points apply during checkout.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" style="grid-template-columns: 280px 1fr; gap:1.5rem;">
+      <aside class="card" data-filter-panel>
+        <h2>Filters</h2>
+        <div class="form-group">
+          <label for="filterSearch">Search</label>
+          <input id="filterSearch" type="text" placeholder="Search product or farm" data-filter-search>
+        </div>
+        <div class="form-group">
+          <label for="filterProduct">Product</label>
+          <select id="filterProduct" data-filter-product>
+            <option value="">All products</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterFarm">Farm</label>
+          <select id="filterFarm" data-filter-farm>
+            <option value="">All farms</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterGrade">Grade</label>
+          <select id="filterGrade" data-filter-grade>
+            <option value="">All grades</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterSeason">Season</label>
+          <select id="filterSeason" data-filter-season>
+            <option value="">Any season</option>
+            <option value="in-season">Currently in season</option>
+            <option value="off-season">Out of season</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterPriceMin">Price range (₱)</label>
+          <div style="display:flex; gap:0.5rem;">
+            <input id="filterPriceMin" data-filter-price-min type="number" min="0" placeholder="Min">
+            <input id="filterPriceMax" data-filter-price-max type="number" min="0" placeholder="Max">
+          </div>
+        </div>
+        <button class="button outline" type="button" data-filter-reset>Reset filters</button>
+      </aside>
+
+      <section class="card">
+        <div class="catalog-toolbar">
+          <div>
+            <small data-catalog-status>Showing 0 - 0 of 0 batches</small>
+          </div>
+          <div class="catalog-controls">
+            <label class="sort-control">Sort by
+              <select data-sort-select>
+                <option value="alpha-asc">Alphabetical (A → Z)</option>
+                <option value="alpha-desc">Alphabetical (Z → A)</option>
+                <option value="price-asc">Price (Low → High)</option>
+                <option value="price-desc">Price (High → Low)</option>
+                <option value="exp-asc">Expiry (Soonest)</option>
+                <option value="exp-desc">Expiry (Latest)</option>
+              </select>
+            </label>
+            <div class="view-toggle">
+              <span>View</span>
+              <button type="button" data-view-grid class="active" aria-label="Grid view">▦</button>
+              <button type="button" data-view-list aria-label="List view">☰</button>
+            </div>
+            <div class="pagination">
+              <button type="button" data-page-prev>&lt;</button>
+              <span data-page-status>Page 1 of 1</span>
+              <button type="button" data-page-next>&gt;</button>
+            </div>
+          </div>
+        </div>
+        <div class="stock-grid" data-catalog-grid></div>
+        <p class="subtitle" data-catalog-empty hidden>No batches match your filters.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

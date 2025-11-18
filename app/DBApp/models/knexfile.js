@@ -3,8 +3,8 @@ const knex = require('knex')({
     connection: {
         host: '127.0.0.1', // localhost
         port: 3306,
-        user: 'app_user',
-        password: 'SUPER_SECRET_PANDA_PASS',
+        user: 'root',
+        password: 'root',
         database: 'kungfoodpanda_db'
     },
     pool: {

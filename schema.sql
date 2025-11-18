@@ -55,6 +55,7 @@ CREATE TABLE FarmProduct (
     product_id INT UNSIGNED NOT NULL,
     farm_id INT UNSIGNED NOT NULL,
     population INT UNSIGNED NOT NULL DEFAULT 0,
+    population_unit VARCHAR(100) NOT NULL,
     PRIMARY KEY (product_id, farm_id),
     FOREIGN KEY (product_id) REFERENCES RawProduct(product_id),
     FOREIGN KEY (farm_id) REFERENCES Farm(farm_id)
@@ -86,6 +87,7 @@ CREATE TABLE Orders (
     is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
     due_by DATE NOT NULL,
     loyalty_points_used INT UNSIGNED DEFAULT 0,
+    program_id INT UNSIGNED DEFAULT NULL,
 
     CHECK (is_shipped IN (0,1)),
     CHECK (quantity > 0),
@@ -93,25 +95,32 @@ CREATE TABLE Orders (
 
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),
-    FOREIGN KEY (location_id) REFERENCES Location(location_id)
+    FOREIGN KEY (location_id) REFERENCES Location(location_id),
+    FOREIGN KEY (program_id) REFERENCES Subscription(program_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Subscription (
 	program_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     product_id INT UNSIGNED NOT NULL,
+    farm_id INT UNSIGNED NOT NULL,
     client_id INT UNSIGNED NOT NULL,
     order_interval_days INT UNSIGNED NOT NULL,
     start_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
     location_id INT UNSIGNED NOT NULL,
-    price DECIMAL(8, 2) NOT NULL DEFAULT 0.00,
+    price DECIMAL(8, 2),
+    status ENUM('AWAITING_QUOTE', 'QUOTED', 'ACTIVE', 'CANCELLED') NOT NULL DEFAULT 'AWAITING_QUOTE',
     
+    UNIQUE (product_id, farm_id, client_id, location_id, order_interval_days),
+
     CHECK (quantity > 0),
     CHECK (order_interval_days > 0),
-    CHECK (price >= 0.00),
-    UNIQUE (product_id, client_id),
+    CHECK (
+        (status IN ('AWAITING_QUOTE', 'CANCELLED') AND (price IS NULL OR price >= 0)) OR
+        (status IN ('QUOTED', 'ACTIVE') AND price >= 0)
+    ),
 
-    FOREIGN KEY (product_id) REFERENCES RawProduct(product_id),
+    FOREIGN KEY (product_id, farm_id) REFERENCES FarmProduct(product_id, farm_id),
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
 ) ENGINE=InnoDB;

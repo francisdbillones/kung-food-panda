@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Console · Atelier du Flavour</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/admin.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
+      </div>
+      <nav>
+        <a class="active" href="admin-console.html">Admin Console</a>
+        <a href="login-admin.html">Admin Login</a>
+        <a href="login-customer.html">Customer Login</a>
+        <a href="login-farmer.html">Farmer Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h1>Administration control center</h1>
+          <p class="subtitle">View and edit every table across customers, farms, locations, inventory, orders, and subscriptions in one consolidated console.</p>
+        </div>
+        <div class="quick-actions" style="justify-content:flex-end;">
+          <button class="button" type="button" data-refresh-admin>Refresh data</button>
+          <a class="button outline" href="login-admin.html">Switch credential</a>
+        </div>
+      </div>
+      <div class="form-feedback" data-admin-alert role="alert"></div>
+      <small>Composite IDs use the format <code>value1:value2</code>. Example: Farm Product key is <code>product_id:farm_id</code>.</small>
+    </section>
+
+    <section class="grid" data-admin-sections></section>
+  </main>
+</body>
+</html>

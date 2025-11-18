@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout Batch · Kung Food Panda</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/order-checkout.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">Kung Food Panda</div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a class="active" href="customer-order.html">Make Order</a>
+        <a href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" data-batch-summary>
+      <a class="button outline" href="customer-order.html">← Back to catalog</a>
+      <h1 data-batch-product>Loading batch…</h1>
+      <p class="subtitle">Farm <strong data-batch-farm></strong> · <span data-batch-location></span></p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+        <div>
+          <small>Price</small>
+          <p><strong data-batch-price>₱0.00</strong></p>
+        </div>
+        <div>
+          <small>Available units</small>
+          <p><strong data-batch-available>0</strong></p>
+        </div>
+        <div>
+          <small>Expires</small>
+          <p data-batch-exp>—</p>
+        </div>
+      </div>
+      <div class="form-feedback" data-checkout-alert role="alert"></div>
+    </section>
+
+    <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+      <form data-checkout-form class="card">
+        <h2>Order details</h2>
+        <div class="form-group">
+          <label for="checkoutQuantity">Quantity</label>
+          <input id="checkoutQuantity" data-checkout-quantity type="number" min="1" value="1" required>
+          <small data-checkout-quantity-hint>Choose up to the available units.</small>
+        </div>
+        <div class="form-group">
+          <label for="checkoutDate">Preferred delivery date</label>
+          <input id="checkoutDate" data-checkout-date type="date" required>
+        </div>
+        <div class="card" style="background:#f8fafc; border:none; padding:1rem;">
+          <h3>Delivery address</h3>
+          <p class="subtitle">Use your default address or supply a custom drop-off.</p>
+          <label style="display:block; margin-bottom:0.35rem;">
+            <input type="radio" name="checkoutAddress" value="default" data-checkout-location-option checked>
+            Keep default address (<span data-checkout-default-location>Loading…</span>)
+          </label>
+          <label style="display:block;">
+            <input type="radio" name="checkoutAddress" value="custom" data-checkout-location-option>
+            Enter custom address
+          </label>
+          <div class="grid" data-checkout-custom-fields hidden style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:1rem;">
+            <div class="form-group">
+              <label for="checkoutStreet">Street</label>
+              <input id="checkoutStreet" data-checkout-street type="text" placeholder="House/Street" disabled>
+            </div>
+            <div class="form-group">
+              <label for="checkoutCity">City</label>
+              <input id="checkoutCity" data-checkout-city type="text" placeholder="City/Town" disabled>
+            </div>
+            <div class="form-group">
+              <label for="checkoutState">State/Province</label>
+              <input id="checkoutState" data-checkout-state type="text" placeholder="Optional" disabled>
+            </div>
+            <div class="form-group">
+              <label for="checkoutCountry">Country</label>
+              <input id="checkoutCountry" data-checkout-country type="text" value="Philippines" disabled>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label for="checkoutLoyalty">Use loyalty points (₱)</label>
+          <input id="checkoutLoyalty" data-checkout-loyalty type="number" min="0" value="0">
+          <small>Each point deducts ₱1 from the subtotal.</small>
+        </div>
+        <button class="button" type="submit">Place order</button>
+        <div class="form-feedback" data-checkout-feedback role="alert"></div>
+      </form>
+
+      <div class="card">
+        <h2>Summary</h2>
+        <p>Subtotal <strong data-checkout-subtotal>₱0.00</strong></p>
+        <p>Loyalty discount <strong data-checkout-discount>-₱0.00</strong></p>
+        <hr>
+        <p style="font-size:1.2rem; font-weight:700;">Total <strong data-checkout-total>₱0.00</strong></p>
+        <small>You will earn <strong data-checkout-points>0 pts</strong> from this order.</small>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

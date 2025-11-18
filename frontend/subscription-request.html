@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Subscription · Kung Food Panda</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/subscription-request.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">Kung Food Panda</div>
+      <nav>
+        <a href="customer-dashboard.html">Dashboard</a>
+        <a href="customer-account.html">Account</a>
+        <a href="customer-order.html">Make Order</a>
+        <a class="active" href="customer-subscribe.html">Subscriptions</a>
+        <a href="login-customer.html">Logins</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h1>Request a farm subscription</h1>
+          <p class="subtitle">Choose a product, compare available farms, and send a quote request in one place.</p>
+        </div>
+        <a class="button outline" href="customer-subscribe.html">View requests</a>
+      </div>
+      <div class="form-feedback" data-request-alert role="alert"></div>
+    </section>
+
+    <section class="card">
+      <form data-request-form>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+          <div class="form-group">
+            <label for="requestProduct">Product</label>
+            <select id="requestProduct" data-product-select required>
+              <option value="">Loading products…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="requestFarm">Farm</label>
+            <select id="requestFarm" data-farm-select required disabled>
+              <option value="">Select a product first</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <div class="form-group">
+            <label for="requestSchedule">Delivery schedule</label>
+            <select id="requestSchedule" data-schedule-select required disabled>
+              <option value="">Select a farm first</option>
+            </select>
+            <div data-custom-schedule hidden style="margin-top:0.5rem;">
+              <label for="requestCustomSchedule">Custom interval (days)</label>
+              <input id="requestCustomSchedule" data-custom-schedule-input type="number" min="1" value="30" disabled>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="requestQuantity">Quantity per delivery</label>
+            <input id="requestQuantity" data-quantity type="number" min="1" value="1" required disabled>
+          </div>
+          <div class="form-group">
+            <label for="requestStart">Preferred start date</label>
+            <input id="requestStart" data-start type="date" required disabled>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1rem;">
+          <h3>Delivery address</h3>
+          <p class="subtitle">Use your default address or specify a custom drop-off point.</p>
+          <label style="display:block; margin-bottom:0.35rem;">
+            <input type="radio" name="addressMode" value="default" data-request-location-option checked>
+            Keep default address (<span data-request-default-location>Loading…</span>)
+          </label>
+          <label style="display:block;">
+            <input type="radio" name="addressMode" value="custom" data-request-location-option>
+            Enter custom address
+          </label>
+          <div class="grid" data-request-custom-fields hidden style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:1rem;">
+            <div class="form-group">
+              <label for="requestStreet">Street</label>
+              <input id="requestStreet" data-request-street type="text" placeholder="House/Street" disabled>
+            </div>
+            <div class="form-group">
+              <label for="requestCity">City</label>
+              <input id="requestCity" data-request-city type="text" placeholder="City/Town" disabled>
+            </div>
+            <div class="form-group">
+              <label for="requestState">State/Province</label>
+              <input id="requestState" data-request-state type="text" placeholder="Optional" disabled>
+            </div>
+            <div class="form-group">
+              <label for="requestCountry">Country</label>
+              <input id="requestCountry" data-request-country type="text" value="Philippines" disabled>
+            </div>
+          </div>
+        </div>
+
+        <button class="button" type="submit" disabled>Submit quote request</button>
+        <div class="form-feedback" data-request-feedback role="alert"></div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
