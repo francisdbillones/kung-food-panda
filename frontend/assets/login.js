@@ -1,5 +1,6 @@
 const LOGIN_FORM_SELECTOR = '[data-login-form]'
 const FEEDBACK_CLASS = 'form-feedback'
+const SESSION_STATUS_ENDPOINT = '/api/session'
 
 const ROLE_CONFIG = {
   customer: {
@@ -147,4 +148,29 @@ function initLoginForms() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initLoginForms)
+async function redirectIfAlreadyAuthenticated() {
+  try {
+    const response = await fetch(SESSION_STATUS_ENDPOINT, { credentials: 'include' })
+    if (!response.ok) {
+      return false
+    }
+    const data = await response.json().catch(() => ({}))
+    const role = data.profile?.role
+    if (!role) {
+      return false
+    }
+    const config = ROLE_CONFIG[role]
+    if (!config?.redirect) {
+      return false
+    }
+    window.location.replace(config.redirect)
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initLoginForms()
+  redirectIfAlreadyAuthenticated()
+})

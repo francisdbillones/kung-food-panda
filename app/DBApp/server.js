@@ -28,6 +28,14 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 }
 
+const ROLE_DEFAULT_ROUTES = {
+  customer: '/customer-dashboard.html',
+  farmer: '/farmer-console.html',
+  admin: '/admin-console.html'
+}
+
+const LOGIN_REDIRECT_PATHS = new Set(['/', '/login', '/login.html'])
+
 const ADMIN_ENTITIES = {
   clients: {
     label: 'Clients',
@@ -180,6 +188,31 @@ function adminMetadataSnapshot() {
     }
     return acc
   }, {})
+}
+
+function getRoleDefaultRoute(role) {
+  if (!role) return null
+  return ROLE_DEFAULT_ROUTES[role] || null
+}
+
+async function redirectLoggedInUsers(request, response, pathname) {
+  if (!LOGIN_REDIRECT_PATHS.has(pathname)) {
+    return false
+  }
+  const session = await getSessionFromRequest(request)
+  if (!session) {
+    return false
+  }
+  const destination = getRoleDefaultRoute(session.data.role)
+  if (!destination) {
+    return false
+  }
+  response.writeHead(302, {
+    Location: destination,
+    'Cache-Control': 'no-store'
+  })
+  response.end()
+  return true
 }
 
 async function fetchAdminEntityRows(config) {
@@ -2387,6 +2420,9 @@ async function routeRequest(request, response) {
   const adminEntityMatch = pathname.match(/^\/api\/admin\/entities\/([^/]+)\/([^/]+)$/)
 
   try {
+    if (request.method === 'GET' && await redirectLoggedInUsers(request, response, pathname)) {
+      return
+    }
     if (request.method === 'POST' && pathname === '/api/login/customer') {
       await handleCustomerLogin(request, response)
       return
