@@ -214,8 +214,18 @@ function renderSubscriptions(subscriptions) {
     const infoList = document.createElement('dl')
     infoList.className = 'subscription-meta'
     const metaFields = [
+      {
+        label: 'Program status',
+        value: `<span class="status-pill ${sub.status === 'ACTIVE' ? 'success' : 'pending'}">${sub.status || 'AWAITING_QUOTE'}</span>`,
+        isHtml: true
+      },
+      {
+        label: 'Delivery status',
+        value: `<span class="status-pill ${sub.deliveryStatusVariant || 'pending'}">${sub.deliveryStatus || 'Pending'}</span>`,
+        isHtml: true
+      },
+      { label: 'Last delivery', value: formatDate(sub.lastDeliveryDate, '—') },
       { label: 'Next delivery', value: formatDate(sub.nextDeliveryDate, 'TBD') },
-      { label: 'Status', value: sub.status || 'AWAITING_QUOTE' },
       { label: 'Price', value: sub.price != null ? formatCurrency(sub.price) : 'Awaiting quote' },
       { label: 'Location', value: sub.locationLabel || 'Delivery location TBD' },
       { label: 'Farm', value: sub.farmName || (sub.farmId ? `Farm #${sub.farmId}` : 'TBD') }
@@ -224,7 +234,11 @@ function renderSubscriptions(subscriptions) {
       const dt = document.createElement('dt')
       dt.textContent = field.label
       const dd = document.createElement('dd')
-      dd.textContent = field.value
+      if (field.isHtml) {
+        dd.innerHTML = field.value
+      } else {
+        dd.textContent = field.value
+      }
       infoList.appendChild(dt)
       infoList.appendChild(dd)
     })

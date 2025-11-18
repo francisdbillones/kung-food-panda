@@ -111,14 +111,14 @@ CREATE TABLE Orders (
     location_id INT UNSIGNED NOT NULL,
     order_date DATE NOT NULL,
     quantity INT UNSIGNED NOT NULL,
-    is_shipped TINYINT(1) NOT NULL DEFAULT 0, 
+    shipped_date DATE DEFAULT NULL,
     due_by DATE NOT NULL,
     loyalty_points_used INT UNSIGNED DEFAULT 0,
     program_id INT UNSIGNED DEFAULT NULL,
 
-    CHECK (is_shipped IN (0,1)),
     CHECK (quantity > 0),
     CHECK (due_by >= order_date),
+    CHECK (shipped_date IS NULL OR shipped_date >= order_date),
 
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),

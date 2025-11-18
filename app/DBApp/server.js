@@ -116,7 +116,7 @@ const ADMIN_ENTITIES = {
       { column: 'location_id', label: 'Location ID', type: 'number' },
       { column: 'order_date', label: 'Order Date', type: 'date' },
       { column: 'quantity', label: 'Quantity', type: 'number' },
-      { column: 'is_shipped', label: 'Is Shipped (0/1)', type: 'number' },
+      { column: 'shipped_date', label: 'Shipped Date', type: 'date' },
       { column: 'due_by', label: 'Due By', type: 'date' },
       { column: 'loyalty_points_used', label: 'Loyalty Points Used', type: 'number' },
       { column: 'program_id', label: 'Program ID', type: 'number' }
@@ -328,21 +328,34 @@ function parseCookies(header = '') {
   }, {})
 }
 
-function toISODate(value) {
+function normalizeDateOnly(value) {
   if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return null
+  if (value instanceof Date) {
+    return new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()))
+  }
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day))
+  }
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()))
+}
+
+function toISODate(value) {
+  const date = normalizeDateOnly(value)
+  if (!date) return null
   return date.toISOString().split('T')[0]
 }
 
 function computeNextDeliveryDate(startDate, intervalDays) {
   if (!startDate || !intervalDays) return null
-  const start = startDate instanceof Date ? startDate : new Date(startDate)
+  const start = normalizeDateOnly(startDate)
   if (Number.isNaN(start.getTime())) return null
   if (intervalDays <= 0) return start
-  const now = new Date()
-  if (start > now) return start
-  const elapsedMs = now.getTime() - start.getTime()
+  const today = normalizeDateOnly(new Date())
+  if (start > today) return start
+  const elapsedMs = today.getTime() - start.getTime()
   const intervalsElapsed = Math.floor(elapsedMs / (intervalDays * DAY_MS)) + 1
   return new Date(start.getTime() + intervalsElapsed * intervalDays * DAY_MS)
 }
@@ -472,6 +485,21 @@ function mapOrderRow(row) {
   const totalAmount = grossAmount == null
     ? null
     : Number(Math.max(0, grossAmount - loyaltyDiscount).toFixed(2))
+  const shippedDate = toISODate(row.shipped_date)
+  const dueDate = row.due_by ? normalizeDateOnly(row.due_by) : null
+  const today = normalizeDateOnly(new Date())
+  let status = 'Pending fulfillment'
+  let statusVariant = 'pending'
+  if (shippedDate) {
+    status = 'Shipped'
+    statusVariant = 'success'
+  } else if (dueDate && dueDate < today) {
+    status = 'Overdue'
+    statusVariant = 'danger'
+  } else if (dueDate && dueDate.getTime() === today.getTime()) {
+    status = 'Due today'
+    statusVariant = 'pending'
+  }
   return {
     orderId: row.order_id,
     productName: row.product_name || `Batch #${row.order_id}`,
@@ -482,8 +510,8 @@ function mapOrderRow(row) {
     totalAmount,
     orderDate: toISODate(row.order_date),
     dueBy: toISODate(row.due_by),
-    status: row.is_shipped ? 'Shipped' : 'Pending fulfillment',
-    statusVariant: row.is_shipped ? 'success' : 'pending',
+    status,
+    statusVariant,
     farmId: row.farm_id || null,
     farmName: row.farm_name || null,
     productGrade: row.grade || null
@@ -493,6 +521,20 @@ function mapOrderRow(row) {
 function mapSubscriptionRow(row) {
   const intervalDays = Number(row.order_interval_days) || null
   const nextDelivery = computeNextDeliveryDate(row.start_date, intervalDays)
+  const lastDelivery = row.last_delivery ? normalizeDateOnly(row.last_delivery) : null
+  const today = normalizeDateOnly(new Date())
+  let deliveryStatus = 'On track'
+  let deliveryStatusVariant = 'success'
+  if (!nextDelivery) {
+    deliveryStatus = 'Awaiting schedule'
+    deliveryStatusVariant = 'pending'
+  } else if (nextDelivery.getTime() === today.getTime()) {
+    deliveryStatus = 'Due today'
+    deliveryStatusVariant = 'pending'
+  } else if (nextDelivery < today) {
+    deliveryStatus = 'Overdue'
+    deliveryStatusVariant = 'danger'
+  }
   const locationParts = [row.city, row.state, row.country].filter(Boolean)
   return {
     programId: row.program_id,
@@ -504,9 +546,12 @@ function mapSubscriptionRow(row) {
     intervalDays,
     startDate: toISODate(row.start_date),
     nextDeliveryDate: nextDelivery ? toISODate(nextDelivery) : null,
+    lastDeliveryDate: lastDelivery ? toISODate(lastDelivery) : null,
     locationLabel: locationParts.join(', ') || null,
     price: row.price != null ? Number(row.price) : null,
-    status: row.status || 'AWAITING_QUOTE'
+    status: row.status || 'AWAITING_QUOTE',
+    deliveryStatus,
+    deliveryStatusVariant
   }
 }
 
@@ -574,10 +619,18 @@ function mapLocationRow(row) {
 }
 
 function buildSubscriptionQuery(clientId) {
+  const lastDeliverySubquery = knex('Orders as so')
+    .whereNotNull('so.shipped_date')
+    .select('so.program_id')
+    .max({ last_delivery: 'so.shipped_date' })
+    .groupBy('so.program_id')
+    .as('ord')
+
   return knex('Subscription as s')
     .leftJoin('RawProduct as rp', 's.product_id', 'rp.product_id')
     .leftJoin('Farm as f', 's.farm_id', 'f.farm_id')
     .leftJoin('Location as loc', 's.location_id', 'loc.location_id')
+    .leftJoin(lastDeliverySubquery, 'ord.program_id', 's.program_id')
     .select(
       's.program_id',
       's.product_id',
@@ -591,7 +644,8 @@ function buildSubscriptionQuery(clientId) {
       'f.name as farm_name',
       'loc.city',
       'loc.state',
-      'loc.country'
+      'loc.country',
+      'ord.last_delivery'
     )
     .where('s.client_id', clientId)
     .orderBy('s.program_id', 'asc')
@@ -740,7 +794,7 @@ function farmerOrderDetailQuery() {
       'o.order_date',
       'o.due_by',
       'o.quantity',
-      'o.is_shipped',
+      'o.shipped_date',
       'c.client_id',
       'c.first_name as client_first_name',
       'c.last_name as client_last_name',
@@ -820,8 +874,9 @@ function mapFarmerOrderRow(row) {
     totalAmount,
     orderDate: toISODate(row.order_date),
     dueBy: toISODate(row.due_by),
-    isShipped: Boolean(row.is_shipped),
-    status: row.is_shipped ? 'Shipped' : 'Pending',
+    shippedDate: toISODate(row.shipped_date),
+    isShipped: Boolean(row.shipped_date),
+    status: row.shipped_date ? 'Shipped' : 'Pending',
     clientLabel,
     shipTo,
     notes: row.notes || null
@@ -921,8 +976,8 @@ async function fetchFarmerDashboardData(farmId) {
     rawProductsPromise
   ])
 
-  const pendingOrders = ordersRows.filter((row) => !row.is_shipped)
-  const fulfilledOrders = ordersRows.filter((row) => row.is_shipped).slice(0, 5)
+  const pendingOrders = ordersRows.filter((row) => !row.shipped_date)
+  const fulfilledOrders = ordersRows.filter((row) => row.shipped_date).slice(0, 5)
 
   return {
     farm: mapFarmRow(farm),
@@ -975,16 +1030,16 @@ async function fetchCustomerDashboardData(clientId) {
       'o.order_date',
       'o.due_by',
       'o.quantity',
-      'o.is_shipped',
       'o.loyalty_points_used',
       'i.price as unit_price',
       'rp.product_name',
       'rp.grade',
       'i.farm_id',
-      'f.name as farm_name'
+      'f.name as farm_name',
+      'o.shipped_date'
     )
     .where('o.client_id', clientId)
-    .andWhere('o.is_shipped', 0)
+    .whereNull('o.shipped_date')
     .orderBy('o.due_by', 'asc')
     .limit(5)
 
@@ -997,13 +1052,13 @@ async function fetchCustomerDashboardData(clientId) {
       'o.order_date',
       'o.due_by',
       'o.quantity',
-      'o.is_shipped',
       'o.loyalty_points_used',
       'i.price as unit_price',
       'rp.product_name',
       'rp.grade',
       'i.farm_id',
-      'f.name as farm_name'
+      'f.name as farm_name',
+      'o.shipped_date'
     )
     .where('o.client_id', clientId)
     .orderBy('o.order_date', 'desc')
@@ -1726,7 +1781,7 @@ async function handleCreateOrder(request, response) {
           location_id: locationId,
           order_date: orderDateStr,
           quantity,
-          is_shipped: 0,
+          shipped_date: null,
           due_by: deliveryDateStr,
           loyalty_points_used: discount
         })
@@ -1980,7 +2035,7 @@ async function handleFarmerFulfillment(request, response) {
             'o.order_id',
             'o.batch_id',
             'o.quantity',
-            'o.is_shipped',
+            'o.shipped_date',
             'o.due_by',
             'inv.farm_id',
             'inv.product_id'
@@ -1995,12 +2050,13 @@ async function handleFarmerFulfillment(request, response) {
         if (orderRow.farm_id !== farmId) {
           throw httpError(403, 'Cannot fulfill orders for another farm.')
         }
-        if (orderRow.is_shipped) {
+        if (orderRow.shipped_date) {
           throw httpError(400, 'Order is already marked as shipped.')
         }
 
+        const shippedDateValue = dueDateStr || toISODate(new Date())
         await trx('Orders').where('order_id', orderIdInput).update({
-          is_shipped: 1,
+          shipped_date: shippedDateValue,
           due_by: dueDateStr || orderRow.due_by
         })
         orderId = orderIdInput
@@ -2062,8 +2118,8 @@ async function handleFarmerFulfillment(request, response) {
           location_id: subscription.location_id,
           order_date: orderDateStr,
           quantity: targetQuantity,
-          is_shipped: 1,
           due_by: dueByStr,
+          shipped_date: dueByStr || orderDateStr,
           loyalty_points_used: 0,
           program_id: subscription.program_id
         })

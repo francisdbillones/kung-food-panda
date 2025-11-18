@@ -164,6 +164,11 @@ h1 {
   color: var(--success);
 }
 
+.status-pill.danger {
+  background: rgba(193, 35, 31, 0.18);
+  color: var(--danger);
+}
+
 .quick-actions {
   display: flex;
   gap: 1rem;
