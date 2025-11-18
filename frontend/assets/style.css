@@ -170,6 +170,16 @@ h1 {
   flex-wrap: wrap;
 }
 
+.scrollable-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
 .button {
   border: none;
   border-radius: 999px;
