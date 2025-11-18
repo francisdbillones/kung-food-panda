@@ -498,6 +498,7 @@ function mapSubscriptionRow(row) {
     programId: row.program_id,
     productId: row.product_id,
     farmId: row.farm_id || null,
+    farmName: row.farm_name || null,
     productName: row.product_name || `Product #${row.product_id}`,
     quantity: Number(row.quantity) || 0,
     intervalDays,
@@ -575,6 +576,7 @@ function mapLocationRow(row) {
 function buildSubscriptionQuery(clientId) {
   return knex('Subscription as s')
     .leftJoin('RawProduct as rp', 's.product_id', 'rp.product_id')
+    .leftJoin('Farm as f', 's.farm_id', 'f.farm_id')
     .leftJoin('Location as loc', 's.location_id', 'loc.location_id')
     .select(
       's.program_id',
@@ -586,6 +588,7 @@ function buildSubscriptionQuery(clientId) {
       's.price',
       's.status',
       'rp.product_name',
+      'f.name as farm_name',
       'loc.city',
       'loc.state',
       'loc.country'

@@ -194,19 +194,41 @@ function renderSubscriptions(subscriptions) {
   subscriptions.forEach((sub) => {
     const card = document.createElement('div')
     card.className = 'subscription-card'
+    const header = document.createElement('div')
+    header.className = 'subscription-card__header'
+    const titleBlock = document.createElement('div')
     const tag = document.createElement('div')
     tag.className = 'tag'
     tag.textContent = intervalLabel(sub.intervalDays)
     const title = document.createElement('h3')
     title.textContent = sub.productName
-    const details = document.createElement('p')
-    details.textContent = `Qty ${sub.quantity} · next ${formatDate(sub.nextDeliveryDate, 'TBD')}`
-    const footnote = document.createElement('small')
-    footnote.textContent = sub.locationLabel || 'Delivery location TBD'
-    card.appendChild(tag)
-    card.appendChild(title)
-    card.appendChild(details)
-    card.appendChild(footnote)
+    titleBlock.appendChild(tag)
+    titleBlock.appendChild(title)
+    const qty = document.createElement('span')
+    qty.className = 'subscription-qty'
+    qty.textContent = `Qty ${sub.quantity}`
+    header.appendChild(titleBlock)
+    header.appendChild(qty)
+    card.appendChild(header)
+
+    const infoList = document.createElement('dl')
+    infoList.className = 'subscription-meta'
+    const metaFields = [
+      { label: 'Next delivery', value: formatDate(sub.nextDeliveryDate, 'TBD') },
+      { label: 'Status', value: sub.status || 'AWAITING_QUOTE' },
+      { label: 'Price', value: sub.price != null ? formatCurrency(sub.price) : 'Awaiting quote' },
+      { label: 'Location', value: sub.locationLabel || 'Delivery location TBD' },
+      { label: 'Farm', value: sub.farmName || (sub.farmId ? `Farm #${sub.farmId}` : 'TBD') }
+    ]
+    metaFields.forEach((field) => {
+      const dt = document.createElement('dt')
+      dt.textContent = field.label
+      const dd = document.createElement('dd')
+      dd.textContent = field.value
+      infoList.appendChild(dt)
+      infoList.appendChild(dd)
+    })
+    card.appendChild(infoList)
     container.appendChild(card)
   })
 }
