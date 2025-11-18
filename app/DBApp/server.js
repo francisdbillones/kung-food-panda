@@ -118,8 +118,7 @@ const ADMIN_ENTITIES = {
       { column: 'quantity', label: 'Quantity', type: 'number' },
       { column: 'shipped_date', label: 'Shipped Date', type: 'date' },
       { column: 'due_by', label: 'Due By', type: 'date' },
-      { column: 'loyalty_points_used', label: 'Loyalty Points Used', type: 'number' },
-      { column: 'program_id', label: 'Program ID', type: 'number' }
+      { column: 'loyalty_points_used', label: 'Loyalty Points Used', type: 'number' }
     ],
     defaultSort: ['order_id', 'desc']
   },
@@ -521,37 +520,21 @@ function mapOrderRow(row) {
 function mapSubscriptionRow(row) {
   const intervalDays = Number(row.order_interval_days) || null
   const nextDelivery = computeNextDeliveryDate(row.start_date, intervalDays)
-  const lastDelivery = row.last_delivery ? normalizeDateOnly(row.last_delivery) : null
-  const today = normalizeDateOnly(new Date())
-  let deliveryStatus = 'On track'
-  let deliveryStatusVariant = 'success'
-  if (!nextDelivery) {
-    deliveryStatus = 'Awaiting schedule'
-    deliveryStatusVariant = 'pending'
-  } else if (nextDelivery.getTime() === today.getTime()) {
-    deliveryStatus = 'Due today'
-    deliveryStatusVariant = 'pending'
-  } else if (nextDelivery < today) {
-    deliveryStatus = 'Overdue'
-    deliveryStatusVariant = 'danger'
-  }
   const locationParts = [row.city, row.state, row.country].filter(Boolean)
   return {
     programId: row.program_id,
     productId: row.product_id,
     farmId: row.farm_id || null,
     farmName: row.farm_name || null,
+    productGrade: row.grade || null,
     productName: row.product_name || `Product #${row.product_id}`,
     quantity: Number(row.quantity) || 0,
     intervalDays,
     startDate: toISODate(row.start_date),
     nextDeliveryDate: nextDelivery ? toISODate(nextDelivery) : null,
-    lastDeliveryDate: lastDelivery ? toISODate(lastDelivery) : null,
     locationLabel: locationParts.join(', ') || null,
     price: row.price != null ? Number(row.price) : null,
-    status: row.status || 'AWAITING_QUOTE',
-    deliveryStatus,
-    deliveryStatusVariant
+    status: row.status || 'AWAITING_QUOTE'
   }
 }
 
@@ -619,18 +602,10 @@ function mapLocationRow(row) {
 }
 
 function buildSubscriptionQuery(clientId) {
-  const lastDeliverySubquery = knex('Orders as so')
-    .whereNotNull('so.shipped_date')
-    .select('so.program_id')
-    .max({ last_delivery: 'so.shipped_date' })
-    .groupBy('so.program_id')
-    .as('ord')
-
   return knex('Subscription as s')
     .leftJoin('RawProduct as rp', 's.product_id', 'rp.product_id')
     .leftJoin('Farm as f', 's.farm_id', 'f.farm_id')
     .leftJoin('Location as loc', 's.location_id', 'loc.location_id')
-    .leftJoin(lastDeliverySubquery, 'ord.program_id', 's.program_id')
     .select(
       's.program_id',
       's.product_id',
@@ -641,11 +616,11 @@ function buildSubscriptionQuery(clientId) {
       's.price',
       's.status',
       'rp.product_name',
+      'rp.grade',
       'f.name as farm_name',
       'loc.city',
       'loc.state',
-      'loc.country',
-      'ord.last_delivery'
+      'loc.country'
     )
     .where('s.client_id', clientId)
     .orderBy('s.program_id', 'asc')
@@ -789,7 +764,6 @@ function farmerOrderDetailQuery() {
     .leftJoin('Location as loc', 'o.location_id', 'loc.location_id')
     .select(
       'o.order_id',
-      'o.program_id',
       'o.batch_id',
       'o.order_date',
       'o.due_by',
@@ -865,7 +839,6 @@ function mapFarmerOrderRow(row) {
   })
   return {
     orderId: row.order_id,
-    programId: row.program_id,
     batchId: row.batch_id,
     productId: row.product_id,
     productName: row.product_name || `Batch #${row.batch_id}`,
@@ -2022,6 +1995,7 @@ async function handleFarmerFulfillment(request, response) {
     }
 
     let orderId = null
+    let fulfilledProgramId = null
     if (mode === 'order') {
       const orderIdInput = Number(body.orderId)
       if (!orderIdInput || Number.isNaN(orderIdInput)) {
@@ -2054,7 +2028,7 @@ async function handleFarmerFulfillment(request, response) {
           throw httpError(400, 'Order is already marked as shipped.')
         }
 
-        const shippedDateValue = dueDateStr || toISODate(new Date())
+        const shippedDateValue = toISODate(new Date())
         await trx('Orders').where('order_id', orderIdInput).update({
           shipped_date: shippedDateValue,
           due_by: dueDateStr || orderRow.due_by
@@ -2067,6 +2041,7 @@ async function handleFarmerFulfillment(request, response) {
         sendJson(response, 400, { error: 'Program ID is required to fulfill a subscription.' })
         return
       }
+      fulfilledProgramId = programId
       if (!batchId || Number.isNaN(batchId)) {
         sendJson(response, 400, { error: 'Select a batch from your inventory.' })
         return
@@ -2119,9 +2094,8 @@ async function handleFarmerFulfillment(request, response) {
           order_date: orderDateStr,
           quantity: targetQuantity,
           due_by: dueByStr,
-          shipped_date: dueByStr || orderDateStr,
-          loyalty_points_used: 0,
-          program_id: subscription.program_id
+          shipped_date: orderDateStr,
+          loyalty_points_used: 0
         })
         orderId = Array.isArray(inserted) ? inserted[0] : inserted
         if (subscription.status === 'QUOTED') {
@@ -2134,9 +2108,9 @@ async function handleFarmerFulfillment(request, response) {
     }
 
     const orderRow = orderId ? await fetchOrderRow(orderId) : null
-    const subscriptionRow = (mode === 'subscription' && body.programId)
-      ? await fetchFarmerSubscriptionRow(Number(body.programId))
-      : (orderRow?.program_id ? await fetchFarmerSubscriptionRow(orderRow.program_id) : null)
+    const subscriptionRow = fulfilledProgramId
+      ? await fetchFarmerSubscriptionRow(fulfilledProgramId)
+      : null
 
     sendJson(response, 200, {
       line: 'Fulfillment recorded.',

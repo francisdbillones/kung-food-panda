@@ -71,6 +71,22 @@ function toDateInput(value) {
   return date.toISOString().split('T')[0]
 }
 
+function normalizeInputDate(value) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function isFutureDate(value) {
+  const date = normalizeInputDate(value)
+  if (!date) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return date > today
+}
+
 function setFeedback(section, message, isSuccess = false) {
   const selector = selectors.alerts[section]
   if (!selector) return
@@ -465,14 +481,39 @@ function buildSubscriptionFulfillment(subscription) {
   button.className = 'button'
   button.textContent = 'Fulfill subscription'
   button.dataset.action = 'fulfill-subscription'
-  if (!matchingBatches.length) {
-    button.disabled = true
+  const scheduleNote = document.createElement('p')
+  scheduleNote.className = 'muted'
+  scheduleNote.style.margin = '0'
+  scheduleNote.hidden = true
+
+  const enforceFulfillmentState = () => {
+    const futureDue = isFutureDate(dateInput.value || subscription.nextDeliveryDate)
+    if (!matchingBatches.length) {
+      button.disabled = true
+      scheduleNote.hidden = futureDue ? false : true
+      if (futureDue) {
+        scheduleNote.textContent = `Next delivery is scheduled for ${formatDate(dateInput.value || subscription.nextDeliveryDate)}.`
+      }
+      return
+    }
+    button.disabled = futureDue
+    if (futureDue) {
+      const label = formatDate(dateInput.value || subscription.nextDeliveryDate)
+      scheduleNote.hidden = false
+      scheduleNote.textContent = `Next delivery (${label}) has not arrived yet.`
+    } else {
+      scheduleNote.hidden = true
+    }
   }
+
+  enforceFulfillmentState()
+  dateInput.addEventListener('change', enforceFulfillmentState)
 
   wrapper.appendChild(batchSelect)
   wrapper.appendChild(qtyInput)
   wrapper.appendChild(dateInput)
   wrapper.appendChild(button)
+  wrapper.appendChild(scheduleNote)
   return wrapper
 }
 

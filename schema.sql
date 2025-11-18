@@ -114,7 +114,6 @@ CREATE TABLE Orders (
     shipped_date DATE DEFAULT NULL,
     due_by DATE NOT NULL,
     loyalty_points_used INT UNSIGNED DEFAULT 0,
-    program_id INT UNSIGNED DEFAULT NULL,
 
     CHECK (quantity > 0),
     CHECK (due_by >= order_date),
@@ -122,6 +121,5 @@ CREATE TABLE Orders (
 
     FOREIGN KEY (client_id) REFERENCES Client(client_id),
     FOREIGN KEY (batch_id) REFERENCES Inventory(batch_id),
-    FOREIGN KEY (location_id) REFERENCES Location(location_id),
-    FOREIGN KEY (program_id) REFERENCES Subscription(program_id)
+    FOREIGN KEY (location_id) REFERENCES Location(location_id)
 ) ENGINE=InnoDB;

@@ -553,18 +553,6 @@ th {
   box-shadow: 0 15px 35px rgba(21, 13, 5, 0.08);
 }
 
-.subscription-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.subscription-qty {
-  font-weight: 600;
-  color: var(--muted);
-}
-
 .tag {
   display: inline-flex;
   align-items: center;
@@ -577,11 +565,23 @@ th {
   font-size: 0.9rem;
 }
 
+.subscription-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.subscription-qty {
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .subscription-meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.75rem 1rem;
-  margin: 1rem 0 0;
+  margin-top: 1rem;
 }
 
 .subscription-meta dt {

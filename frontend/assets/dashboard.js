@@ -48,6 +48,7 @@ function formatDate(value, fallback = '—') {
   return dateFormatter.format(date)
 }
 
+
 function pluralize(count, singular) {
   return `${count} ${count === 1 ? singular : `${singular}s`}`
 }
@@ -194,6 +195,7 @@ function renderSubscriptions(subscriptions) {
   subscriptions.forEach((sub) => {
     const card = document.createElement('div')
     card.className = 'subscription-card'
+
     const header = document.createElement('div')
     header.className = 'subscription-card__header'
     const titleBlock = document.createElement('div')
@@ -211,38 +213,25 @@ function renderSubscriptions(subscriptions) {
     header.appendChild(qty)
     card.appendChild(header)
 
-    const infoList = document.createElement('dl')
-    infoList.className = 'subscription-meta'
-    const metaFields = [
-      {
-        label: 'Program status',
-        value: `<span class="status-pill ${sub.status === 'ACTIVE' ? 'success' : 'pending'}">${sub.status || 'AWAITING_QUOTE'}</span>`,
-        isHtml: true
-      },
-      {
-        label: 'Delivery status',
-        value: `<span class="status-pill ${sub.deliveryStatusVariant || 'pending'}">${sub.deliveryStatus || 'Pending'}</span>`,
-        isHtml: true
-      },
-      { label: 'Last delivery', value: formatDate(sub.lastDeliveryDate, '—') },
+    const meta = document.createElement('dl')
+    meta.className = 'subscription-meta'
+    const fields = [
       { label: 'Next delivery', value: formatDate(sub.nextDeliveryDate, 'TBD') },
-      { label: 'Price', value: sub.price != null ? formatCurrency(sub.price) : 'Awaiting quote' },
+      { label: 'Grade', value: sub.productGrade || '—' },
+      { label: 'Farm', value: sub.farmName || (sub.farmId ? `Farm #${sub.farmId}` : 'TBD') },
       { label: 'Location', value: sub.locationLabel || 'Delivery location TBD' },
-      { label: 'Farm', value: sub.farmName || (sub.farmId ? `Farm #${sub.farmId}` : 'TBD') }
+      { label: 'Price', value: sub.price != null ? formatCurrency(sub.price) : 'Awaiting quote' }
     ]
-    metaFields.forEach((field) => {
+    fields.forEach((field) => {
       const dt = document.createElement('dt')
       dt.textContent = field.label
       const dd = document.createElement('dd')
-      if (field.isHtml) {
-        dd.innerHTML = field.value
-      } else {
-        dd.textContent = field.value
-      }
-      infoList.appendChild(dt)
-      infoList.appendChild(dd)
+      dd.textContent = field.value
+      meta.appendChild(dt)
+      meta.appendChild(dd)
     })
-    card.appendChild(infoList)
+
+    card.appendChild(meta)
     container.appendChild(card)
   })
 }
