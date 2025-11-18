@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Subscription Quote · Kung Food Panda</title>
   <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/session.js" defer></script>
   <script src="assets/subscription-detail.js" defer></script>
 </head>
 <body>
@@ -12,11 +13,15 @@
     <div class="navbar">
       <div class="logo">Kung Food Panda</div>
       <nav>
-        <a href="customer-dashboard.html">Dashboard</a>
-        <a href="customer-account.html">Account</a>
-        <a href="customer-order.html">Make Order</a>
-        <a class="active" href="customer-subscribe.html">Subscriptions</a>
-        <a href="login.html">Logins</a>
+        <a href="customer-dashboard.html" data-visible-roles="customer">Customer Dashboard</a>
+        <a href="customer-account.html" data-visible-roles="customer">Account</a>
+        <a href="customer-order.html" data-visible-roles="customer">Make Order</a>
+        <a class="active" href="customer-subscribe.html" data-visible-roles="customer">Subscriptions</a>
+        <a href="farmer-console.html" data-visible-roles="farmer">Farmer Console</a>
+        <a href="admin-console.html" data-visible-roles="admin">Admin Console</a>
+        <a href="login.html" data-visible-roles="guest">Log in</a>
+        <button type="button" class="link-button" data-logout data-visible-roles="customer,farmer,admin">Log out</button>
+        <span class="user-label" data-user-label></span>
       </nav>
     </div>
   </header>

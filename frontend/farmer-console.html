@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Farmer Console · Atelier du Flavour</title>
   <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/session.js" defer></script>
   <script src="assets/farmer.js" defer></script>
 </head>
 <body>
@@ -14,9 +15,15 @@
         <img class="logo-mark" src="assets/logo.svg" alt="Atelier du Flavour logo">
       </div>
       <nav>
-        <a class="active" href="farmer-console.html">Farmer Console</a>
-        <a href="login.html#farmer">Farmer Login</a>
-        <a href="login.html#customer">Customer Login</a>
+        <a href="customer-dashboard.html" data-visible-roles="customer">Customer Dashboard</a>
+        <a href="customer-account.html" data-visible-roles="customer">Account</a>
+        <a href="customer-order.html" data-visible-roles="customer">Make Order</a>
+        <a href="customer-subscribe.html" data-visible-roles="customer">Subscriptions</a>
+        <a class="active" href="farmer-console.html" data-visible-roles="farmer">Farmer Console</a>
+        <a href="admin-console.html" data-visible-roles="admin">Admin Console</a>
+        <a href="login.html" data-visible-roles="guest">Log in</a>
+        <button type="button" class="link-button" data-logout data-visible-roles="customer,farmer,admin">Log out</button>
+        <span class="user-label" data-user-label></span>
       </nav>
     </div>
   </header>
