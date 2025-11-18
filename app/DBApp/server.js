@@ -483,7 +483,10 @@ function mapOrderRow(row) {
     orderDate: toISODate(row.order_date),
     dueBy: toISODate(row.due_by),
     status: row.is_shipped ? 'Shipped' : 'Pending fulfillment',
-    statusVariant: row.is_shipped ? 'success' : 'pending'
+    statusVariant: row.is_shipped ? 'success' : 'pending',
+    farmId: row.farm_id || null,
+    farmName: row.farm_name || null,
+    productGrade: row.grade || null
   }
 }
 
@@ -963,6 +966,7 @@ async function fetchCustomerDashboardData(clientId) {
   const pendingOrdersPromise = knex('Orders as o')
     .leftJoin('Inventory as i', 'o.batch_id', 'i.batch_id')
     .leftJoin('RawProduct as rp', 'i.product_id', 'rp.product_id')
+    .leftJoin('Farm as f', 'i.farm_id', 'f.farm_id')
     .select(
       'o.order_id',
       'o.order_date',
@@ -971,7 +975,10 @@ async function fetchCustomerDashboardData(clientId) {
       'o.is_shipped',
       'o.loyalty_points_used',
       'i.price as unit_price',
-      'rp.product_name'
+      'rp.product_name',
+      'rp.grade',
+      'i.farm_id',
+      'f.name as farm_name'
     )
     .where('o.client_id', clientId)
     .andWhere('o.is_shipped', 0)
@@ -981,6 +988,7 @@ async function fetchCustomerDashboardData(clientId) {
   const recentOrdersPromise = knex('Orders as o')
     .leftJoin('Inventory as i', 'o.batch_id', 'i.batch_id')
     .leftJoin('RawProduct as rp', 'i.product_id', 'rp.product_id')
+    .leftJoin('Farm as f', 'i.farm_id', 'f.farm_id')
     .select(
       'o.order_id',
       'o.order_date',
@@ -989,7 +997,10 @@ async function fetchCustomerDashboardData(clientId) {
       'o.is_shipped',
       'o.loyalty_points_used',
       'i.price as unit_price',
-      'rp.product_name'
+      'rp.product_name',
+      'rp.grade',
+      'i.farm_id',
+      'f.name as farm_name'
     )
     .where('o.client_id', clientId)
     .orderBy('o.order_date', 'desc')

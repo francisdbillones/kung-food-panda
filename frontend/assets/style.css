@@ -170,6 +170,17 @@ h1 {
   flex-wrap: wrap;
 }
 
+.loyalty-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(241, 111, 74, 0.04);
+}
+
 .scrollable-list {
   margin-top: 1rem;
   display: flex;
@@ -178,6 +189,67 @@ h1 {
   max-height: 320px;
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+.pending-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 253, 251, 0.8);
+}
+
+.pending-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.pending-item__header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.pending-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pending-column {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.pending-column h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.pending-value {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.pending-column dl {
+  margin: 0;
+}
+
+.pending-column dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.pending-column dd {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
 }
 
 .button {

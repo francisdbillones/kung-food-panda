@@ -37,6 +37,20 @@
         <a class="button secondary" href="customer-subscribe.html">Browse subscriptions</a>
         <a class="button outline" href="customer-account.html">Update account</a>
       </div>
+      <div class="loyalty-summary">
+        <div>
+          <small>Available points</small>
+          <strong data-loyalty-points>0 pts</strong>
+        </div>
+        <div>
+          <small>Equivalent value</small>
+          <strong data-loyalty-value>₱0.00</strong>
+        </div>
+        <div>
+          <small>Last refreshed</small>
+          <span data-loyalty-refreshed>—</span>
+        </div>
+      </div>
       <div class="form-feedback" data-dashboard-alert role="alert"></div>
     </section>
 
@@ -54,21 +68,6 @@
         <div class="scrollable-list" data-subscriptions></div>
         <p class="subtitle" data-subscriptions-empty hidden>No active subscriptions yet.</p>
         <a class="button outline" href="customer-subscribe.html" style="margin-top:1rem;">Manage subscriptions</a>
-      </div>
-
-      <div class="card">
-        <h2>Loyalty & rewards</h2>
-        <div class="loyalty-banner">
-          <div>
-            <small>Available points</small>
-            <strong data-loyalty-points>0 pts</strong>
-            <p>Redeem up to <span data-loyalty-value>₱0.00</span> on your next order.</p>
-          </div>
-        </div>
-        <div style="margin-top:1rem;">
-          <small>Last refreshed</small>
-          <p data-loyalty-refreshed>—</p>
-        </div>
       </div>
     </section>
 

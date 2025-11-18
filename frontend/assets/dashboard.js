@@ -104,16 +104,77 @@ function renderPendingOrders(orders) {
   if (countEl) countEl.textContent = `${pluralize(orders.length, 'order')} ready for fulfillment`
   if (emptyEl) emptyEl.hidden = true
   orders.forEach((order) => {
-    const wrapper = document.createElement('div')
-    const pill = document.createElement('div')
+    const card = document.createElement('div')
+    card.className = 'pending-item'
+
+    const header = document.createElement('div')
+    header.className = 'pending-item__header'
+    const title = document.createElement('div')
+    const heading = document.createElement('h3')
+    const baseName = order.productName || `Order #${order.orderId}`
+    heading.textContent = order.productGrade ? `${baseName} · Grade ${order.productGrade}` : baseName
+    title.appendChild(heading)
+    const pill = document.createElement('span')
     pill.className = `status-pill ${order.statusVariant || 'pending'}`
-    pill.textContent = `Order #${order.orderId} · ${order.status}`
-    const info = document.createElement('p')
-    const amountLabel = order.totalAmount != null ? formatCurrency(order.totalAmount) : '—'
-    info.textContent = `${amountLabel} · qty ${order.quantity} · due ${formatDate(order.dueBy)} · ${order.productName}`
-    wrapper.appendChild(pill)
-    wrapper.appendChild(info)
-    container.appendChild(wrapper)
+    pill.textContent = order.status
+    header.appendChild(title)
+    header.appendChild(pill)
+
+    const columns = document.createElement('div')
+    columns.className = 'pending-columns'
+    const columnData = [
+      {
+        title: 'Due',
+        value: formatDate(order.dueBy),
+        entries: [
+          { label: 'Unit price', value: order.unitPrice != null ? formatCurrency(order.unitPrice) : '—' },
+          { label: 'Amount due', value: order.totalAmount != null ? formatCurrency(order.totalAmount) : '—' }
+        ]
+      },
+      {
+        title: 'Placed',
+        value: formatDate(order.orderDate),
+        entries: [
+          { label: 'Quantity', value: order.quantity },
+          { label: 'Subtotal', value: order.grossAmount != null ? formatCurrency(order.grossAmount) : '—' }
+        ]
+      },
+      {
+        title: 'Product',
+        value: order.productGrade ? `Grade ${order.productGrade}` : order.productName || '—',
+        entries: [
+          { label: 'Farm', value: order.farmName || '—' },
+          { label: 'Loyalty used', value: order.loyaltyDiscount ? `${order.loyaltyDiscount} pts` : '—' }
+        ]
+      }
+    ]
+
+    columnData.forEach((column) => {
+      const columnEl = document.createElement('div')
+      columnEl.className = 'pending-column'
+      const heading = document.createElement('h4')
+      heading.textContent = column.title
+      const valueEl = document.createElement('p')
+      valueEl.className = 'pending-value'
+      valueEl.textContent = column.value
+      columnEl.appendChild(heading)
+      columnEl.appendChild(valueEl)
+      const list = document.createElement('dl')
+      column.entries.forEach((entry) => {
+        const dt = document.createElement('dt')
+        dt.textContent = entry.label
+        const dd = document.createElement('dd')
+        dd.textContent = entry.value
+        list.appendChild(dt)
+        list.appendChild(dd)
+      })
+      columnEl.appendChild(list)
+      columns.appendChild(columnEl)
+    })
+
+    card.appendChild(header)
+    card.appendChild(columns)
+    container.appendChild(card)
   })
 }
 
