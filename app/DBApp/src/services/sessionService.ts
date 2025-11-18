@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import crypto from 'crypto'
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { LOGIN_REDIRECT_PATHS, ROLE_DEFAULT_ROUTES, SESSION_COOKIE, SESSION_TABLE, SESSION_TTL_MS } from '../config'
 import { buildSessionCookie, parseCookies, sendJson } from '../lib/http'
 

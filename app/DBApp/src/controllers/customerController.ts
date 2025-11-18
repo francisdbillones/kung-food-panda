@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { URLSearchParams } from 'url'
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { readBody, sendJson } from '../lib/http'
 import { formatLocationLabel } from '../lib/locations'
 import { httpError } from '../lib/errors'

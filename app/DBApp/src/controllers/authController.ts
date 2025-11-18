@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { ADMIN_ID, SESSION_COOKIE } from '../config'
 import { readBody, sendJson, parseCookies } from '../lib/http'
 import { buildAuthCookieHeader, createSessionRecord, deleteSession, getSessionFromRequest } from '../services/sessionService'

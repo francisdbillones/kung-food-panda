@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { readBody, sendJson } from '../lib/http'
 import { requireSession } from '../services/sessionService'
 import {

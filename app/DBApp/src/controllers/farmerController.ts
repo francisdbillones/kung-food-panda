@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { readBody, sendJson } from '../lib/http'
 import { httpError } from '../lib/errors'
 import { toISODate } from '../lib/dates'

@@ -1,4 +1,4 @@
-import knex from '../../models/knexfile.js'
+import knex from '../models/knexfile'
 import { httpError } from '../lib/errors'
 
 export interface AdminFieldConfig {
