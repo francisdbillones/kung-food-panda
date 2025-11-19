@@ -13,6 +13,8 @@ import {
   mapRawProductLite
 } from '../services/mappers'
 
+const PRODUCT_GRADES = new Set(['SSR', 'SR', 'R', 'UC', 'C'])
+
 function inventoryDetailQuery() {
   return knex('Inventory as inv')
     .leftJoin('RawProduct as rp', 'inv.product_id', 'rp.product_id')
@@ -111,6 +113,18 @@ function isBeforeToday(value: unknown): boolean {
   const today = normalizeDateOnly(new Date())
   if (!today) return false
   return date.getTime() < today.getTime()
+}
+
+function normalizeSeasonDate(value: unknown, label: string) {
+  const date = normalizeDateOnly(value)
+  if (!date || Number.isNaN(date.getTime())) {
+    throw httpError(400, `Enter a valid ${label}.`)
+  }
+  const iso = toISODate(date)
+  if (!iso) {
+    throw httpError(400, `Enter a valid ${label}.`)
+  }
+  return { date, iso }
 }
 
 async function getFarmRecord(farmId: number) {
@@ -625,12 +639,15 @@ export async function handleFarmerOfferingsCreate(request: IncomingMessage, resp
   const farmId = Number(session.data.farmId)
   try {
     const body = await readBody<any>(request)
-    const productId = Number(body.productId)
+    let productId = body.productId != null ? Number(body.productId) : NaN
     const population = Number(body.population || 0)
     const populationUnit = typeof body.populationUnit === 'string' ? body.populationUnit.trim() : ''
+    const wantsNewProduct = !productId || Number.isNaN(productId) || body.newProduct
     if (!productId || Number.isNaN(productId)) {
-      sendJson(response, 400, { error: 'Select a product to add.' })
-      return
+      if (!wantsNewProduct) {
+        sendJson(response, 400, { error: 'Select a product to add.' })
+        return
+      }
     }
     if (Number.isNaN(population) || population < 0) {
       sendJson(response, 400, { error: 'Population must be zero or greater.' })
@@ -640,10 +657,65 @@ export async function handleFarmerOfferingsCreate(request: IncomingMessage, resp
       sendJson(response, 400, { error: 'Specify a population unit.' })
       return
     }
-    const product = await knex('RawProduct').where('product_id', productId).first()
-    if (!product) {
-      sendJson(response, 404, { error: 'Product not found.' })
-      return
+    if (body.newProduct) {
+      const newProduct = body.newProduct || {}
+      const productName = typeof newProduct.productName === 'string' ? newProduct.productName.trim() : ''
+      const productType = typeof newProduct.productType === 'string' ? newProduct.productType.trim() : ''
+      const grade = typeof newProduct.grade === 'string' ? newProduct.grade.trim().toUpperCase() : ''
+      if (!productName) {
+        sendJson(response, 400, { error: 'Enter a product name.' })
+        return
+      }
+      if (!productType) {
+        sendJson(response, 400, { error: 'Enter a product type.' })
+        return
+      }
+      if (!PRODUCT_GRADES.has(grade)) {
+        sendJson(response, 400, { error: 'Select a valid grade.' })
+        return
+      }
+      let startSeason
+      let endSeason
+      try {
+        const start = normalizeSeasonDate(newProduct.startSeason, 'season start date')
+        const end = normalizeSeasonDate(newProduct.endSeason, 'season end date')
+        if (end.date.getTime() <= start.date.getTime()) {
+          sendJson(response, 400, { error: 'End of season must be after the start date.' })
+          return
+        }
+        startSeason = start.iso
+        endSeason = end.iso
+      } catch (error: any) {
+        if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+          sendJson(response, error.statusCode, { error: error.message })
+          return
+        }
+        throw error
+      }
+      const maxRow = await knex('RawProduct').max('product_id as maxId').first()
+      productId = Number(maxRow?.maxId || 0) + 1
+      try {
+        await knex('RawProduct').insert({
+          product_id: productId,
+          product_name: productName,
+          product_type: productType,
+          grade,
+          start_season: startSeason,
+          end_season: endSeason
+        })
+      } catch (error: any) {
+        if (error.code === 'ER_DUP_ENTRY') {
+          sendJson(response, 409, { error: 'A product with this name and grade already exists.' })
+          return
+        }
+        throw error
+      }
+    } else {
+      const product = await knex('RawProduct').where('product_id', productId).first()
+      if (!product) {
+        sendJson(response, 404, { error: 'Product not found.' })
+        return
+      }
     }
     try {
       await knex('FarmProduct').insert({

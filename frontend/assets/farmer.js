@@ -31,7 +31,10 @@ const selectors = {
   offeringEmpty: '[data-offering-empty]',
   offeringCount: '[data-offering-count]',
   offeringForm: '[data-offering-form]',
-  offeringProductSelect: '[data-offering-product]'
+  offeringProductSelect: '[data-offering-product]',
+  offeringExistingFields: '[data-offering-existing-fields]',
+  offeringProductMode: '[data-offering-product-mode]',
+  offeringNewFields: '[data-offering-new-fields]'
 }
 
 const state = {
@@ -51,6 +54,8 @@ const weightFormatter = new Intl.NumberFormat('en-PH', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2
 })
+
+const PRODUCT_GRADES = ['SSR', 'SR', 'R', 'UC', 'C']
 
 function $(selector) {
   return document.querySelector(selector)
@@ -102,6 +107,79 @@ function todayInputValue() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return formatDateOnly(today)
+}
+
+function hasUsableOptions(select) {
+  if (!select) return false
+  return Array.from(select.options || []).some((option) => option.value)
+}
+
+function applyOfferingFormMode() {
+  const form = $(selectors.offeringForm)
+  if (!form) return
+  const modeInput = form.querySelector(selectors.offeringProductMode)
+  const mode = modeInput?.value || 'existing'
+  const isNew = mode === 'new'
+  const productSelect = form.querySelector(selectors.offeringProductSelect)
+  const canChooseExisting = hasUsableOptions(productSelect)
+  const existingFields = form.querySelector(selectors.offeringExistingFields)
+  if (productSelect) {
+    productSelect.disabled = isNew || !canChooseExisting
+    productSelect.required = !isNew
+    if (isNew) {
+      productSelect.value = ''
+    }
+  }
+  const newFields = form.querySelector(selectors.offeringNewFields)
+  if (newFields) {
+    newFields.hidden = !isNew
+    newFields.style.display = isNew ? '' : 'none'
+    newFields.querySelectorAll('input, select').forEach((input) => {
+      input.required = isNew
+      if (!isNew) {
+        input.value = ''
+      }
+    })
+  }
+  if (existingFields) {
+    existingFields.hidden = isNew
+    existingFields.style.display = isNew ? 'none' : ''
+  }
+}
+
+function readNewProductPayload(form) {
+  const productName = form.newProductName?.value?.trim()
+  if (!productName) {
+    return { error: 'Enter a product name.' }
+  }
+  const productType = form.newProductType?.value?.trim()
+  if (!productType) {
+    return { error: 'Enter a product type.' }
+  }
+  const grade = form.newProductGrade?.value?.trim().toUpperCase()
+  if (!PRODUCT_GRADES.includes(grade)) {
+    return { error: 'Select a valid product grade.' }
+  }
+  const startDate = normalizeInputDate(form.newProductStartSeason?.value)
+  if (!startDate) {
+    return { error: 'Enter a valid season start date.' }
+  }
+  const endDate = normalizeInputDate(form.newProductEndSeason?.value)
+  if (!endDate) {
+    return { error: 'Enter a valid season end date.' }
+  }
+  if (endDate.getTime() <= startDate.getTime()) {
+    return { error: 'Season end date must be after the start date.' }
+  }
+  return {
+    payload: {
+      productName,
+      productType,
+      grade,
+      startSeason: formatDateOnly(startDate),
+      endSeason: formatDateOnly(endDate)
+    }
+  }
 }
 
 function isFutureDate(value) {
@@ -193,6 +271,7 @@ function populateBatchForm(card, batch) {
   const inputs = card.querySelectorAll('[data-batch-field]')
   const buttons = card.querySelectorAll('[data-batch-action]')
   const emptyMessage = card.querySelector('[data-no-batch]')
+  const expirationNotice = card.querySelector('[data-expiration-notice]')
   inputs.forEach((input) => {
     const field = input.dataset.batchField
     if (!batch) {
@@ -215,6 +294,15 @@ function populateBatchForm(card, batch) {
   })
   if (emptyMessage) {
     emptyMessage.hidden = Boolean(batch)
+  }
+  if (expirationNotice) {
+    if (batch && batch.expDate && isPastDate(batch.expDate)) {
+      expirationNotice.hidden = false
+      expirationNotice.textContent = `Batch expired on ${formatDate(batch.expDate)}. Delete it or restock to prevent accidental shipments.`
+    } else {
+      expirationNotice.hidden = true
+      expirationNotice.textContent = ''
+    }
   }
 }
 
@@ -258,6 +346,14 @@ function renderInventory() {
     title.innerHTML = `<strong>${group.productName || `Product #${group.productId}`}</strong><br><small>${typeLabel}</small>`
     const stats = document.createElement('div')
     stats.innerHTML = `<small>Inventory</small><p><strong>${group.totalQuantity}</strong> units · ${group.batchCount} batches</p>`
+    const expiredBatches = group.batches.filter((batch) => batch.expDate && isPastDate(batch.expDate))
+    if (expiredBatches.length) {
+      const badge = document.createElement('span')
+      badge.className = 'badge'
+      badge.textContent = `${expiredBatches.length} expired ${expiredBatches.length === 1 ? 'batch' : 'batches'}`
+      badge.title = 'Expired batches should be removed so they are not promised to customers.'
+      stats.appendChild(badge)
+    }
     header.appendChild(title)
     header.appendChild(stats)
     card.appendChild(header)
@@ -282,7 +378,9 @@ function renderInventory() {
       group.batches.forEach((batch) => {
         const option = document.createElement('option')
         option.value = batch.batchId
-        option.textContent = `Batch #${batch.batchId} · ${batch.quantity} units · exp ${formatDate(batch.expDate)}`
+        const expired = batch.expDate && isPastDate(batch.expDate)
+        const suffix = expired ? ' · expired' : ''
+        option.textContent = `Batch #${batch.batchId} · ${batch.quantity} units · exp ${formatDate(batch.expDate)}${suffix}`
         select.appendChild(option)
       })
       select.value = group.batches[0]?.batchId || ''
@@ -290,6 +388,12 @@ function renderInventory() {
     selectWrapper.appendChild(selectLabel)
     selectWrapper.appendChild(select)
     card.appendChild(selectWrapper)
+
+    const expirationNotice = document.createElement('div')
+    expirationNotice.className = 'entity-message'
+    expirationNotice.dataset.expirationNotice = ''
+    expirationNotice.hidden = true
+    card.appendChild(expirationNotice)
 
     const emptyMessage = document.createElement('p')
     emptyMessage.className = 'muted'
@@ -700,6 +804,7 @@ function populateOfferingOptions() {
     option.textContent = 'All products already added'
     select.appendChild(option)
     select.disabled = true
+    applyOfferingFormMode()
     return
   }
   const placeholder = document.createElement('option')
@@ -713,6 +818,7 @@ function populateOfferingOptions() {
     select.appendChild(option)
   })
   select.disabled = false
+  applyOfferingFormMode()
 }
 
 async function fetchJson(url, options = {}) {
@@ -974,24 +1080,50 @@ async function handleSubscriptionClick(event) {
 async function submitOfferingForm(event) {
   event.preventDefault()
   const form = event.currentTarget
-  const productId = Number($(selectors.offeringProductSelect)?.value)
+  const productSelect = $(selectors.offeringProductSelect)
+  const modeInput = form.querySelector(selectors.offeringProductMode)
+  const mode = modeInput?.value || 'existing'
+  const productId = Number(productSelect?.value)
   const population = Number(form.population.value)
   const populationUnit = form.populationUnit.value?.trim()
-  if (!productId) {
-    setFeedback('offerings', 'Select a product before adding an offering.', false)
+  if (Number.isNaN(population) || population < 0) {
+    setFeedback('offerings', 'Enter a valid population.', false)
     return
   }
   if (!populationUnit) {
     setFeedback('offerings', 'Enter a population unit.', false)
     return
   }
+  const payload = {
+    population,
+    populationUnit
+  }
+  if (mode === 'existing') {
+    if (!productId || Number.isNaN(productId)) {
+      const hasOptions = hasUsableOptions(productSelect)
+      const message = hasOptions
+        ? 'Select a product before adding an offering.'
+        : 'No products available. Choose “Create new product” instead.'
+      setFeedback('offerings', message, false)
+      return
+    }
+    payload.productId = productId
+  } else if (mode === 'new') {
+    const { error, payload: newProduct } = readNewProductPayload(form)
+    if (error) {
+      setFeedback('offerings', error, false)
+      return
+    }
+    payload.newProduct = newProduct
+  }
   try {
     setFeedback('offerings', 'Adding offering…', true)
     await fetchJson(OFFERINGS_ENDPOINT, {
       method: 'POST',
-      body: JSON.stringify({ productId, population, populationUnit })
+      body: JSON.stringify(payload)
     })
     form.reset()
+    applyOfferingFormMode()
     setFeedback('offerings', 'Offering added.', true)
     await loadDashboard()
   } catch (error) {
@@ -1088,10 +1220,28 @@ function configureInventoryForm() {
   expInput.addEventListener('focus', enforceMin)
 }
 
+function configureOfferingForm() {
+  const form = $(selectors.offeringForm)
+  if (!form) return
+  const modeInput = form.querySelector(selectors.offeringProductMode)
+  if (modeInput) {
+    modeInput.addEventListener('change', applyOfferingFormMode)
+  }
+  form.addEventListener('reset', () => {
+    window.setTimeout(applyOfferingFormMode, 0)
+  })
+  applyOfferingFormMode()
+}
+
 function init() {
   bindEvents()
   configureInventoryForm()
+  configureOfferingForm()
   loadDashboard()
 }
 
 document.addEventListener('DOMContentLoaded', init)
+  const existingFields = form.querySelector(selectors.offeringExistingFields)
+  if (existingFields) {
+    existingFields.hidden = isNew
+  }

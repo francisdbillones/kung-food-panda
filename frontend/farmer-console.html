@@ -148,7 +148,14 @@
         <form data-offering-form>
           <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
             <div class="form-group">
-              <label for="offProduct">Product</label>
+              <label for="offProductMode">Product source</label>
+              <select id="offProductMode" name="productMode" data-offering-product-mode>
+                <option value="existing" selected>Use existing product</option>
+                <option value="new">Create new product</option>
+              </select>
+            </div>
+            <div class="form-group" data-offering-existing-fields>
+              <label for="offProduct">Existing product</label>
               <select id="offProduct" data-offering-product required>
                 <option value="">Loading products…</option>
               </select>
@@ -160,6 +167,35 @@
             <div class="form-group">
               <label for="offPopulationUnit">Population Unit</label>
               <input id="offPopulationUnit" name="populationUnit" type="text" placeholder="e.g. trees" required>
+            </div>
+          </div>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top:1rem;" data-offering-new-fields hidden>
+            <div class="form-group">
+              <label for="offNewName">New product name</label>
+              <input id="offNewName" name="newProductName" type="text" placeholder="e.g. Dragonfruit">
+            </div>
+            <div class="form-group">
+              <label for="offNewType">Product type</label>
+              <input id="offNewType" name="newProductType" type="text" placeholder="Fruit, grain…">
+            </div>
+            <div class="form-group">
+              <label for="offNewGrade">Grade</label>
+              <select id="offNewGrade" name="newProductGrade">
+                <option value="">Select grade</option>
+                <option value="SSR">SSR</option>
+                <option value="SR">SR</option>
+                <option value="R">R</option>
+                <option value="UC">UC</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="offNewStart">Season start</label>
+              <input id="offNewStart" name="newProductStartSeason" type="date">
+            </div>
+            <div class="form-group">
+              <label for="offNewEnd">Season end</label>
+              <input id="offNewEnd" name="newProductEndSeason" type="date">
             </div>
           </div>
           <button class="button" type="submit" style="margin-top:1rem;">Add offering</button>
