@@ -2,6 +2,8 @@ const DASHBOARD_ENDPOINT = '/api/farmer/dashboard'
 const INVENTORY_ENDPOINT = '/api/farmer/inventory'
 const FULFILLMENT_ENDPOINT = '/api/farmer/fulfillments'
 const OFFERINGS_ENDPOINT = '/api/farmer/offerings'
+const REPORT_CATALOG_ENDPOINT = '/api/farmer/reports'
+const REPORT_PDF_ENDPOINT = '/api/farmer/reports/pdf'
 const LOGIN_FALLBACK = '/login.html#farmer'
 
 const selectors = {
@@ -35,7 +37,23 @@ const selectors = {
   offeringProductSelect: '[data-offering-product]',
   offeringExistingFields: '[data-offering-existing-fields]',
   offeringProductMode: '[data-offering-product-mode]',
-  offeringNewFields: '[data-offering-new-fields]'
+  offeringNewFields: '[data-offering-new-fields]',
+  reports: {
+    list: '[data-report-list]',
+    form: '[data-report-form]',
+    results: '[data-report-results]',
+    empty: '[data-report-empty]',
+    summary: '[data-report-summary]',
+    chart: '[data-report-chart]',
+    table: '[data-report-table]',
+    offerings: '[data-report-offerings]'
+  },
+  reportClearButton: '[data-clear-report]',
+  reportRefreshButton: '[data-refresh-reports]',
+  tabs: {
+    buttons: '[data-tab-button]',
+    contents: '[data-tab-content]'
+  }
 }
 
 const state = {
@@ -43,7 +61,14 @@ const state = {
   inventory: [],
   orders: { pending: [], fulfilled: [] },
   subscriptions: [],
-  offerings: { active: [], availableProducts: [] }
+  offerings: { active: [], availableProducts: [] },
+  reports: {
+    catalog: [],
+    options: { products: [] },
+    activeReportId: null,
+    result: null,
+    userAdjustedFilters: false
+  }
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-PH', {
@@ -108,6 +133,123 @@ function todayInputValue() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return formatDateOnly(today)
+}
+
+function setActiveTab(tabId) {
+  document.querySelectorAll(selectors.tabs.buttons).forEach((button) => {
+    const isActive = button.dataset.tabButton === tabId
+    button.classList.toggle('active', isActive)
+  })
+  document.querySelectorAll(selectors.tabs.contents).forEach((content) => {
+    const key = content.getAttribute('data-tab-content')
+    if (!key) return
+    content.hidden = key !== tabId
+  })
+}
+
+function handleTabButtonClick(event) {
+  const button = event.currentTarget
+  const tabId = button?.dataset.tabButton
+  if (tabId) {
+    setActiveTab(tabId)
+  }
+}
+
+function renderReportList() {
+  const container = $(selectors.reports.list)
+  if (!container) return
+  container.innerHTML = ''
+  const reports = state.reports.catalog || []
+  if (!reports.length) {
+    const message = document.createElement('p')
+    message.className = 'muted-text'
+    message.textContent = 'No reports configured yet.'
+    container.appendChild(message)
+    return
+  }
+  reports.forEach((report) => {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'report-card'
+    button.dataset.reportId = report.id
+    if (report.id === state.reports.activeReportId) {
+      button.classList.add('active')
+    }
+    const title = document.createElement('strong')
+    title.textContent = report.title
+    const description = document.createElement('p')
+    description.className = 'muted-text'
+    description.textContent = report.description
+    button.appendChild(title)
+    button.appendChild(description)
+    container.appendChild(button)
+  })
+}
+
+function handleReportListClick(event) {
+  const target = event.target.closest('[data-report-id]')
+  if (!target) return
+  const reportId = target.dataset.reportId
+  if (!reportId || reportId === state.reports.activeReportId) return
+  state.reports.activeReportId = reportId
+  renderReportList()
+  setFeedback('reports', 'Report selected. Choose a date range and generate.', true)
+}
+
+async function loadReportOptions() {
+  const refreshButton = $(selectors.reportRefreshButton)
+  if (refreshButton) refreshButton.disabled = true
+  try {
+    setFeedback('reports', 'Loading report catalog…', true)
+    const data = await fetchJson(REPORT_CATALOG_ENDPOINT)
+    state.reports.catalog = data?.reports || []
+    state.reports.activeReportId = state.reports.catalog[0]?.id || null
+    renderReportList()
+    setReportFormDefaults({ reset: true })
+    setFeedback('reports', data?.line || 'Reports ready to generate.', true)
+  } catch (error) {
+    console.error('Report catalog error', error)
+    setFeedback('reports', error.message || 'Unable to load report catalog.', false)
+  } finally {
+    if (refreshButton) refreshButton.disabled = false
+  }
+}
+
+function handleReportClear(event) {
+  event.preventDefault()
+  setReportFormDefaults({ reset: true })
+  setFeedback('reports', 'Filters reset. Generate to export a fresh document.', true)
+}
+
+async function submitReportForm(event) {
+  event.preventDefault()
+  const form = event.currentTarget
+  const fromValue = form.startDateFrom?.value
+  const toValue = form.startDateTo?.value
+  if (!fromValue || !toValue) {
+    setFeedback('reports', 'Select a start and end date.', false)
+    return
+  }
+  const payload = {
+    startDateFrom: fromValue,
+    startDateTo: toValue
+  }
+  try {
+    setFeedback('reports', 'Generating report…', true)
+    const data = await fetchJson(REPORT_PDF_ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+    if (data?.url) {
+      setFeedback('reports', 'Opening PDF…', true)
+      window.location.href = data.url
+      return
+    }
+    setFeedback('reports', 'Report generated but no download link provided.', false)
+  } catch (error) {
+    console.error('Farm pdf report error', error)
+    setFeedback('reports', error.message || 'Unable to generate the report.', false)
+  }
 }
 
 function hasUsableOptions(select) {
@@ -197,6 +339,31 @@ function isPastDate(value) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return date < today
+}
+
+function defaultReportDateRange() {
+  const end = new Date()
+  end.setHours(0, 0, 0, 0)
+  const start = new Date(end)
+  start.setDate(start.getDate() - 90)
+  return {
+    from: formatDateOnly(start),
+    to: formatDateOnly(end)
+  }
+}
+
+function setReportFormDefaults({ reset = false } = {}) {
+  const form = $(selectors.reports.form)
+  if (!form) return
+  const { from, to } = defaultReportDateRange()
+  const fromInput = form.querySelector('input[name="startDateFrom"]')
+  const toInput = form.querySelector('input[name="startDateTo"]')
+  if (fromInput && (reset || !fromInput.value)) {
+    fromInput.value = from
+  }
+  if (toInput && (reset || !toInput.value)) {
+    toInput.value = to
+  }
 }
 
 function setFeedback(section, message, isSuccess = false) {
@@ -573,91 +740,20 @@ function buildSubscriptionActions(subscription) {
 function buildSubscriptionFulfillment(subscription) {
   const wrapper = document.createElement('div')
   wrapper.className = 'subscription-fulfillment'
-  const eligible = subscription.status === 'ACTIVE'
-  if (!eligible) {
-    const note = document.createElement('p')
-    note.className = 'muted'
-    if (subscription.status === 'CANCELLED') {
-      note.textContent = 'This program has been cancelled. Fulfillment is no longer available.'
-    } else {
-      note.textContent = 'Fulfillment opens once the customer activates the subscription.'
-    }
-    wrapper.appendChild(note)
-    return wrapper
-  }
-
-  const matchingBatches = availableInventoryForProduct(subscription.productId)
-
-  const batchSelect = document.createElement('select')
-  batchSelect.dataset.subscriptionBatch = ''
-  if (!matchingBatches.length) {
-    const option = document.createElement('option')
-    option.value = ''
-    option.textContent = 'No inventory available'
-    batchSelect.appendChild(option)
-    batchSelect.disabled = true
+  const note = document.createElement('p')
+  note.className = 'muted'
+  note.style.margin = '0'
+  const nextDelivery = subscription.nextDeliveryDate || subscription.startDate
+  if (subscription.status === 'CANCELLED') {
+    note.textContent = 'This program has been cancelled. No future deliveries are scheduled.'
+  } else if (subscription.status === 'ACTIVE') {
+    note.textContent = `Next delivery target: ${formatDate(nextDelivery)}.`
+  } else if (subscription.status === 'QUOTED') {
+    note.textContent = 'Awaiting customer approval. Deliveries will be scheduled once the quote is accepted.'
   } else {
-    const placeholder = document.createElement('option')
-    placeholder.value = ''
-    placeholder.textContent = 'Select batch'
-    batchSelect.appendChild(placeholder)
-    matchingBatches.forEach((batch) => {
-      const option = document.createElement('option')
-      option.value = batch.batchId
-      option.textContent = `Batch #${batch.batchId} (${batch.quantity} left)`
-      batchSelect.appendChild(option)
-    })
+    note.textContent = 'Fulfillment opens once the customer activates this subscription.'
   }
-
-  const qtyInput = document.createElement('input')
-  qtyInput.type = 'number'
-  qtyInput.min = '1'
-  qtyInput.value = subscription.quantity || 1
-  qtyInput.dataset.subscriptionQuantity = ''
-
-  const dateInput = document.createElement('input')
-  dateInput.type = 'date'
-  dateInput.value = toDateInput(subscription.nextDeliveryDate) || toDateInput(subscription.startDate) || ''
-  dateInput.dataset.subscriptionDate = ''
-
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = 'button'
-  button.textContent = 'Fulfill subscription'
-  button.dataset.action = 'fulfill-subscription'
-  const scheduleNote = document.createElement('p')
-  scheduleNote.className = 'muted'
-  scheduleNote.style.margin = '0'
-  scheduleNote.hidden = true
-
-  const enforceFulfillmentState = () => {
-    const futureDue = isFutureDate(dateInput.value || subscription.nextDeliveryDate)
-    if (!matchingBatches.length) {
-      button.disabled = true
-      scheduleNote.hidden = futureDue ? false : true
-      if (futureDue) {
-        scheduleNote.textContent = `Next delivery is scheduled for ${formatDate(dateInput.value || subscription.nextDeliveryDate)}.`
-      }
-      return
-    }
-    button.disabled = futureDue
-    if (futureDue) {
-      const label = formatDate(dateInput.value || subscription.nextDeliveryDate)
-      scheduleNote.hidden = false
-      scheduleNote.textContent = `Next delivery (${label}) has not arrived yet.`
-    } else {
-      scheduleNote.hidden = true
-    }
-  }
-
-  enforceFulfillmentState()
-  dateInput.addEventListener('change', enforceFulfillmentState)
-
-  wrapper.appendChild(batchSelect)
-  wrapper.appendChild(qtyInput)
-  wrapper.appendChild(dateInput)
-  wrapper.appendChild(button)
-  wrapper.appendChild(scheduleNote)
+  wrapper.appendChild(note)
   return wrapper
 }
 
@@ -1212,6 +1308,25 @@ function bindEvents() {
   if (offeringTable) {
     offeringTable.addEventListener('click', handleOfferingTableClick)
   }
+  const reportForm = $(selectors.reports.form)
+  if (reportForm) {
+    reportForm.addEventListener('submit', submitReportForm)
+  }
+  const reportList = $(selectors.reports.list)
+  if (reportList) {
+    reportList.addEventListener('click', handleReportListClick)
+  }
+  const reportClear = $(selectors.reportClearButton)
+  if (reportClear) {
+    reportClear.addEventListener('click', handleReportClear)
+  }
+  const reportRefresh = $(selectors.reportRefreshButton)
+  if (reportRefresh) {
+    reportRefresh.addEventListener('click', loadReportOptions)
+  }
+  document.querySelectorAll(selectors.tabs.buttons).forEach((button) => {
+    button.addEventListener('click', handleTabButtonClick)
+  })
 }
 
 function configureInventoryForm() {
@@ -1242,11 +1357,10 @@ function init() {
   bindEvents()
   configureInventoryForm()
   configureOfferingForm()
+  setActiveTab('operations')
+  setReportFormDefaults({ reset: true })
   loadDashboard()
+  loadReportOptions()
 }
 
 document.addEventListener('DOMContentLoaded', init)
-  const existingFields = form.querySelector(selectors.offeringExistingFields)
-  if (existingFields) {
-    existingFields.hidden = isNew
-  }
