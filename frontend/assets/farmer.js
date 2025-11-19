@@ -13,6 +13,7 @@ const selectors = {
     offerings: '[data-offering-alert]'
   },
   farmId: '[data-farm-id]',
+  farmNameInline: '[data-farm-name]',
   farmLocation: '[data-farm-location]',
   refreshButton: '[data-refresh-dashboard]',
   inventoryProducts: '[data-inventory-products]',
@@ -310,6 +311,10 @@ function updateHero() {
   const farmIdEl = $(selectors.farmId)
   if (farmIdEl) {
     farmIdEl.textContent = state.farm?.farmId || '—'
+  }
+  const farmNameInline = $(selectors.farmNameInline)
+  if (farmNameInline) {
+    farmNameInline.textContent = state.farm?.name || '—'
   }
   const farmLocationEl = $(selectors.farmLocation)
   if (farmLocationEl) {

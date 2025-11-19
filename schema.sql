@@ -90,8 +90,6 @@ CREATE TABLE Subscription (
     price DECIMAL(8, 2),
     status ENUM('AWAITING_QUOTE', 'QUOTED', 'ACTIVE', 'CANCELLED') NOT NULL DEFAULT 'AWAITING_QUOTE',
     
-    UNIQUE (product_id, farm_id, client_id, location_id, order_interval_days),
-
     CHECK (quantity > 0),
     CHECK (order_interval_days > 0),
     CHECK (
