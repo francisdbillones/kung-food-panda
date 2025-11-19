@@ -42,6 +42,9 @@ function buildSubscriptionQuery(clientId: number) {
     .leftJoin('RawProduct as rp', 's.product_id', 'rp.product_id')
     .leftJoin('Farm as f', 's.farm_id', 'f.farm_id')
     .leftJoin('Location as loc', 's.location_id', 'loc.location_id')
+    .leftJoin('Inventory as inv', function joinInventory() {
+      this.on('inv.product_id', '=', 's.product_id').andOn('inv.farm_id', '=', 's.farm_id')
+    })
     .select(
       's.program_id',
       's.product_id',
@@ -58,7 +61,24 @@ function buildSubscriptionQuery(clientId: number) {
       'loc.state',
       'loc.country'
     )
+    .max({ unit_weight: 'inv.weight' })
     .where('s.client_id', clientId)
+    .groupBy(
+      's.program_id',
+      's.product_id',
+      's.farm_id',
+      's.start_date',
+      's.order_interval_days',
+      's.quantity',
+      's.price',
+      's.status',
+      'rp.product_name',
+      'rp.grade',
+      'f.name',
+      'loc.city',
+      'loc.state',
+      'loc.country'
+    )
     .orderBy('s.program_id', 'asc')
 }
 
@@ -140,6 +160,7 @@ async function fetchCustomerDashboardData(clientId: number) {
       'o.quantity',
       'o.loyalty_points_used',
       'i.price as unit_price',
+      'i.weight as unit_weight',
       'rp.product_name',
       'rp.grade',
       'i.farm_id',
@@ -162,6 +183,7 @@ async function fetchCustomerDashboardData(clientId: number) {
       'o.quantity',
       'o.loyalty_points_used',
       'i.price as unit_price',
+      'i.weight as unit_weight',
       'rp.product_name',
       'rp.grade',
       'i.farm_id',
@@ -179,6 +201,7 @@ async function fetchCustomerDashboardData(clientId: number) {
     recentOrdersPromise,
     subscriptionsPromise
   ])
+  const activeSubscriptionRows = subscriptionsRows.filter((row) => row.status !== 'CANCELLED')
 
   return {
     profile: {
@@ -189,7 +212,7 @@ async function fetchCustomerDashboardData(clientId: number) {
     },
     pendingOrders: pendingOrdersRows.map(mapOrderRow),
     recentOrders: recentOrdersRows.map(mapOrderRow),
-    subscriptions: subscriptionsRows.map(mapSubscriptionRow)
+    subscriptions: activeSubscriptionRows.map(mapSubscriptionRow)
   }
 }
 
