@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import knex from '../models/knexfile'
 import { readBody, sendJson } from '../lib/http'
 import { httpError } from '../lib/errors'
-import { toISODate } from '../lib/dates'
+import { normalizeDateOnly, toISODate } from '../lib/dates'
 import { requireSession } from '../services/sessionService'
 import {
   mapFarmOfferingRow,
@@ -102,6 +102,14 @@ async function fetchOrderRow(orderId: number) {
 
 async function fetchFarmerSubscriptionRow(programId: number) {
   return farmerSubscriptionDetailQuery().where('s.program_id', programId).first()
+}
+
+function isBeforeToday(value: unknown): boolean {
+  const date = normalizeDateOnly(value)
+  if (!date) return false
+  const today = normalizeDateOnly(new Date())
+  if (!today) return false
+  return date.getTime() < today.getTime()
 }
 
 async function getFarmRecord(farmId: number) {
@@ -209,7 +217,7 @@ export async function handleFarmerInventoryCreate(request: IncomingMessage, resp
     const price = Number(body.price)
     const weight = Number(body.weight)
     const quantity = Number(body.quantity)
-    const expDate = body.expDate ? new Date(body.expDate) : null
+    const expDate = normalizeDateOnly(body.expDate)
     const notes = body.notes ? String(body.notes).trim() : null
 
     if (!productId || Number.isNaN(productId)) {
@@ -232,6 +240,10 @@ export async function handleFarmerInventoryCreate(request: IncomingMessage, resp
       sendJson(response, 400, { error: 'Expiration date is required.' })
       return
     }
+    if (isBeforeToday(expDate)) {
+      sendJson(response, 400, { error: 'Expiration date cannot be in the past.' })
+      return
+    }
 
     const productLink = await knex('FarmProduct')
       .where({ product_id: productId, farm_id: farmId })
@@ -241,7 +253,11 @@ export async function handleFarmerInventoryCreate(request: IncomingMessage, resp
       return
     }
 
-    const expDateStr = expDate.toISOString().split('T')[0]
+    const expDateStr = toISODate(expDate)
+    if (!expDateStr) {
+      sendJson(response, 400, { error: 'Expiration date is invalid.' })
+      return
+    }
     const insertResult = await knex('Inventory').insert({
       product_id: productId,
       farm_id: farmId,
@@ -299,12 +315,21 @@ export async function handleFarmerInventoryUpdate(request: IncomingMessage, resp
       updates.quantity = qty
     }
     if (body.expDate) {
-      const expDate = new Date(body.expDate)
-      if (Number.isNaN(expDate.getTime())) {
+      const expDate = normalizeDateOnly(body.expDate)
+      if (!expDate || Number.isNaN(expDate.getTime())) {
         sendJson(response, 400, { error: 'Expiration date is invalid.' })
         return
       }
-      updates.exp_date = expDate.toISOString().split('T')[0]
+      if (isBeforeToday(expDate)) {
+        sendJson(response, 400, { error: 'Expiration date cannot be in the past.' })
+        return
+      }
+      const expDateStr = toISODate(expDate)
+      if (!expDateStr) {
+        sendJson(response, 400, { error: 'Expiration date is invalid.' })
+        return
+      }
+      updates.exp_date = expDateStr
     }
     if (body.notes !== undefined) {
       updates.notes = body.notes ? String(body.notes).trim() : null

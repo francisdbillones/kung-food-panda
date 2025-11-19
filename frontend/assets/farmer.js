@@ -57,18 +57,26 @@ function formatCurrency(value) {
   return currencyFormatter.format(number)
 }
 
+function formatDateOnly(date) {
+  if (!(date instanceof Date)) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function formatDate(value) {
   if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return date.toISOString().split('T')[0]
+  return formatDateOnly(date)
 }
 
 function toDateInput(value) {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toISOString().split('T')[0]
+  return formatDateOnly(date)
 }
 
 function normalizeInputDate(value) {
@@ -79,12 +87,26 @@ function normalizeInputDate(value) {
   return date
 }
 
+function todayInputValue() {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return formatDateOnly(today)
+}
+
 function isFutureDate(value) {
   const date = normalizeInputDate(value)
   if (!date) return false
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return date > today
+}
+
+function isPastDate(value) {
+  const date = normalizeInputDate(value)
+  if (!date) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return date < today
 }
 
 function setFeedback(section, message, isSuccess = false) {
@@ -737,6 +759,14 @@ async function submitInventoryForm(event) {
     expDate: form.expDate.value,
     notes: form.notes.value?.trim() || undefined
   }
+  if (!payload.expDate) {
+    setFeedback('inventory', 'Select an expiration date.', false)
+    return
+  }
+  if (isPastDate(payload.expDate)) {
+    setFeedback('inventory', 'Expiration date cannot be in the past.', false)
+    return
+  }
   try {
     setFeedback('inventory', 'Saving batch…', true)
     await fetchJson(INVENTORY_ENDPOINT, {
@@ -1014,8 +1044,20 @@ function bindEvents() {
   }
 }
 
+function configureInventoryForm() {
+  const form = $(selectors.inventoryForm)
+  const expInput = form?.querySelector('input[name="expDate"]')
+  if (!expInput) return
+  const enforceMin = () => {
+    expInput.min = todayInputValue()
+  }
+  enforceMin()
+  expInput.addEventListener('focus', enforceMin)
+}
+
 function init() {
   bindEvents()
+  configureInventoryForm()
   loadDashboard()
 }
 
