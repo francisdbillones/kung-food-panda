@@ -25,6 +25,8 @@ const statusVariant = {
   CANCELLED: ''
 }
 
+const cancellableStatuses = new Set(['AWAITING_QUOTE', 'QUOTED', 'ACTIVE'])
+
 const frequencyLabels = {
   7: 'Weekly',
   14: 'Bi-weekly',
@@ -58,6 +60,10 @@ function formatDate(value) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   return dateFormatter.format(date)
+}
+
+function isCancellable(subscription) {
+  return subscription && cancellableStatuses.has(subscription.status)
 }
 
 function renderRequests(subscriptions) {
@@ -102,6 +108,18 @@ function renderRequests(subscriptions) {
     const nextCell = document.createElement('td')
     nextCell.textContent = formatDate(sub.nextDeliveryDate)
 
+    const actionsCell = document.createElement('td')
+    if (isCancellable(sub)) {
+      const cancelButton = document.createElement('button')
+      cancelButton.type = 'button'
+      cancelButton.className = 'button outline'
+      cancelButton.textContent = 'Cancel'
+      cancelButton.dataset.cancelSubscription = String(sub.programId)
+      actionsCell.appendChild(cancelButton)
+    } else {
+      actionsCell.textContent = '—'
+    }
+
     row.appendChild(productCell)
     row.appendChild(farmCell)
     row.appendChild(cadenceCell)
@@ -109,6 +127,7 @@ function renderRequests(subscriptions) {
     row.appendChild(statusCell)
     row.appendChild(priceCell)
     row.appendChild(nextCell)
+    row.appendChild(actionsCell)
     body.appendChild(row)
   })
 }
@@ -128,9 +147,12 @@ function renderSummary(subscriptions, locationLabel) {
   setText(selectors.customerLocation, locationLabel || 'No default location set')
 }
 
-async function loadRequests() {
+async function loadRequests(options = {}) {
+  const { showStatus = true } = options
   try {
-    setAlert('Loading subscription requests…', true)
+    if (showStatus) {
+      setAlert('Loading subscription requests…', true)
+    }
     const response = await fetch(SUBSCRIPTIONS_ENDPOINT, { credentials: 'include' })
     if (response.status === 401) {
       window.location.href = '/login.html#customer'
@@ -143,11 +165,58 @@ async function loadRequests() {
     const subs = data.subscriptions || []
     renderRequests(subs)
     renderSummary(subs, data.location?.label)
-    setAlert('Subscription requests updated.', true)
+    if (showStatus) {
+      setAlert('Subscription requests updated.', true)
+    }
   } catch (error) {
     console.error('Subscription list error', error)
     setAlert(error.message || 'Unable to load subscriptions.', false)
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadRequests)
+async function requestCancellation(programId, control) {
+  if (!programId) return
+  const confirmed = window.confirm('Cancel this subscription? This cannot be undone.')
+  if (!confirmed) return
+  if (control) control.disabled = true
+  try {
+    setAlert('Cancelling subscription…')
+    const response = await fetch(`${SUBSCRIPTIONS_ENDPOINT}/${programId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+    if (response.status === 401) {
+      window.location.href = '/login.html#customer'
+      return
+    }
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data?.error || 'Unable to cancel subscription.')
+    }
+    setAlert(data?.line || 'Subscription cancelled.', true)
+    await loadRequests({ showStatus: false })
+  } catch (error) {
+    console.error('Cancel subscription error', error)
+    setAlert(error.message || 'Unable to cancel subscription.')
+  } finally {
+    if (control) control.disabled = false
+  }
+}
+
+function handleRequestClick(event) {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const button = target.closest('[data-cancel-subscription]')
+  if (!(button instanceof HTMLButtonElement)) return
+  const programId = Number(button.getAttribute('data-cancel-subscription'))
+  if (!programId) return
+  requestCancellation(programId, button)
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const body = $(selectors.requestsBody)
+  if (body) {
+    body.addEventListener('click', handleRequestClick)
+  }
+  loadRequests()
+})

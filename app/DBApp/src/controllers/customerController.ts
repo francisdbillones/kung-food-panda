@@ -342,6 +342,47 @@ export async function handleCreateSubscription(request: IncomingMessage, respons
   }
 }
 
+export async function handleCancelSubscription(
+  request: IncomingMessage,
+  response: ServerResponse,
+  programId?: number
+) {
+  const session = await requireSession(request, response, 'customer')
+  if (!session) return
+  const clientId = Number(session.data.customerId)
+  if (!programId) {
+    sendJson(response, 400, { error: 'Program ID is required.' })
+    return
+  }
+  try {
+    const subscription = await knex('Subscription')
+      .where({ program_id: programId, client_id: clientId })
+      .first()
+    if (!subscription) {
+      sendJson(response, 404, { error: 'Subscription not found.' })
+      return
+    }
+    if (subscription.status === 'CANCELLED') {
+      sendJson(response, 400, { error: 'This subscription is already cancelled.' })
+      return
+    }
+    const cancellableStatuses = ['AWAITING_QUOTE', 'QUOTED', 'ACTIVE']
+    if (!cancellableStatuses.includes(subscription.status)) {
+      sendJson(response, 400, { error: 'Only pending, quoted, or active subscriptions can be cancelled.' })
+      return
+    }
+    await knex('Subscription').where('program_id', programId).update({ status: 'CANCELLED' })
+    const updatedRow = await buildSubscriptionQuery(clientId).where('s.program_id', programId).first()
+    sendJson(response, 200, {
+      line: 'Subscription cancelled.',
+      subscription: updatedRow ? mapSubscriptionRow(updatedRow) : null
+    })
+  } catch (error) {
+    console.error('Cancel subscription error', error)
+    sendJson(response, 500, { error: 'Unable to cancel subscription.' })
+  }
+}
+
 export async function handleProductOffers(request: IncomingMessage, response: ServerResponse, searchParams: URLSearchParams) {
   const session = await requireSession(request, response, 'customer')
   if (!session) return

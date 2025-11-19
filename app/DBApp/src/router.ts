@@ -5,6 +5,7 @@ import { handleCustomerLogin, handleFarmerLogin, handleAdminLogin, handleSession
 import {
   handleAccountRead,
   handleAccountUpdate,
+  handleCancelSubscription,
   handleCreateLocation,
   handleCreateOrder,
   handleCreateSubscription,
@@ -40,6 +41,7 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
   const farmerInventoryMatch = pathname.match(/^\/api\/farmer\/inventory\/(\d+)$/)
   const farmerSubscriptionMatch = pathname.match(/^\/api\/farmer\/subscriptions\/(\d+)$/)
   const farmerOfferingMatch = pathname.match(/^\/api\/farmer\/offerings\/(\d+)$/)
+  const customerSubscriptionMatch = pathname.match(/^\/api\/customer\/subscriptions\/(\d+)$/)
   const adminEntityMatch = pathname.match(/^\/api\/admin\/entities\/([^/]+)\/([^/]+)$/)
 
   try {
@@ -76,6 +78,10 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
     }
     if (request.method === 'POST' && pathname === '/api/customer/subscriptions') {
       await handleCreateSubscription(request, response)
+      return
+    }
+    if (customerSubscriptionMatch && request.method === 'DELETE') {
+      await handleCancelSubscription(request, response, Number(customerSubscriptionMatch[1]))
       return
     }
     if (request.method === 'GET' && pathname === '/api/customer/subscriptions/offers') {
