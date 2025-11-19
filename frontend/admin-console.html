@@ -29,11 +29,18 @@
   </header>
 
   <main>
-    <section class="card">
-      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:space-between; align-items:flex-start;">
+    <section class="card admin-hero">
+      <div class="hero-layout">
         <div>
           <h1>Administration control center</h1>
-          <p class="subtitle">View and edit every table across customers, farms, locations, inventory, orders, and subscriptions in one consolidated console.</p>
+          <p class="subtitle">Monitor the health of every dataset, jump to the right table instantly, and act on issues without leaving this console.</p>
+          <div class="hero-meta">
+            <div>
+              <span class="badge">Live data</span>
+              <p class="muted-text">All widgets stay in sync with the latest database snapshot.</p>
+            </div>
+            <small>Composite IDs use the format <code>value1:value2</code>. Example: Farm Product key is <code>product_id:farm_id</code>.</small>
+          </div>
         </div>
         <div class="quick-actions" style="justify-content:flex-end;">
           <button class="button" type="button" data-refresh-admin>Refresh data</button>
@@ -41,7 +48,42 @@
         </div>
       </div>
       <div class="form-feedback" data-admin-alert role="alert"></div>
-      <small>Composite IDs use the format <code>value1:value2</code>. Example: Farm Product key is <code>product_id:farm_id</code>.</small>
+    </section>
+
+    <section class="grid dashboard-grid" data-admin-insights>
+      <!-- Populated by admin.js -->
+    </section>
+
+    <section class="card entity-toolbar">
+      <div class="entity-toolbar__row">
+        <div>
+          <h2>Data explorer</h2>
+          <p class="subtitle">Search for a table, skim its quick facts, or jump directly via the shortcuts.</p>
+        </div>
+        <div class="entity-toolbar__actions">
+          <button class="button tertiary" type="button" data-expand-entities>Expand all</button>
+          <button class="button tertiary" type="button" data-collapse-entities>Collapse all</button>
+        </div>
+      </div>
+      <div class="entity-toolbar__controls">
+        <label class="chip-input">
+          <span class="chip-input__label">Universal search</span>
+          <input type="search" placeholder="Search by table name, column, or keyword…" data-entity-filter-input>
+        </label>
+        <div class="entity-nav" data-entity-nav></div>
+        <small class="muted-text">Select a table to focus on its records. Click again to return to the full view.</small>
+      </div>
+    </section>
+
+    <section class="card search-results" data-entity-search-results hidden>
+      <div class="search-results__header">
+        <div>
+          <h3>Universal search</h3>
+          <p class="subtitle">Tables, columns, and matching rows show up here. Click a result to jump to the right spot.</p>
+        </div>
+        <span class="badge" data-search-results-count>0 matches</span>
+      </div>
+      <ul class="search-results__list" data-entity-search-list></ul>
     </section>
 
     <section class="grid" data-admin-sections></section>
