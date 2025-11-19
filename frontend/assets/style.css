@@ -492,8 +492,53 @@ label {
   margin-top: 0.25rem;
 }
 
+.form-feedback.info {
+  color: var(--muted);
+}
+
 .form-feedback.success {
   color: var(--success);
+}
+
+.form-feedback.error {
+  color: var(--danger);
+}
+
+.entity-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  background: rgba(193, 35, 31, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(193, 35, 31, 0.2);
+}
+
+.entity-message[hidden] {
+  display: none;
+}
+
+.entity-message.success {
+  background: rgba(62, 122, 74, 0.1);
+  color: var(--success);
+  border-color: rgba(62, 122, 74, 0.3);
+}
+
+.entity-message__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.entity-message button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 input,

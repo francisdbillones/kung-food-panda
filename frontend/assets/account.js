@@ -25,11 +25,14 @@ function $(selector) {
   return document.querySelector(selector)
 }
 
-function setFeedback(message, isSuccess = false) {
+function setFeedback(message, state = 'info') {
   const el = $(selectors.feedback)
   if (!el) return
   el.textContent = message || ''
-  el.classList.toggle('success', Boolean(isSuccess))
+  const statuses = ['info', 'success', 'error']
+  statuses.forEach((status) => {
+    el.classList.toggle(status, Boolean(message) && state === status)
+  })
 }
 
 function fillForm(profile) {
@@ -123,7 +126,7 @@ function serializeProfile() {
 
 async function loadAccount() {
   try {
-    setFeedback('Loading account…', true)
+    setFeedback('Loading account…', 'info')
     const response = await fetch(ACCOUNT_ENDPOINT, { credentials: 'include' })
     if (response.status === 401) {
       window.location.href = '/login.html#customer'
@@ -137,17 +140,17 @@ async function loadAccount() {
     state.location = data.location
     fillForm(data.profile)
     fillLocation(data.location)
-    setFeedback('Account ready.', true)
+    setFeedback('Account ready.', 'success')
   } catch (error) {
     console.error('Account load error', error)
-    setFeedback(error.message || 'Unable to load account.', false)
+    setFeedback(error.message || 'Unable to load account.', 'error')
   }
 }
 
 async function handleSubmit(event) {
   event.preventDefault()
   try {
-    setFeedback('Saving changes…', true)
+    setFeedback('Saving changes…', 'info')
     const locationId = await resolveLocationId()
     const payload = serializeProfile()
     if (locationId) {
@@ -171,10 +174,10 @@ async function handleSubmit(event) {
     state.location = data.location
     fillForm(data.profile)
     fillLocation(data.location)
-    setFeedback('Account updated successfully.', true)
+    setFeedback('Account updated successfully.', 'success')
   } catch (error) {
     console.error('Account save error', error)
-    setFeedback(error.message || 'Unable to update account.', false)
+    setFeedback(error.message || 'Unable to update account.', 'error')
   }
 }
 
@@ -198,7 +201,7 @@ function initForm() {
       fillLocation(state.location)
       setMode('default')
       resetCustomLocation()
-      setFeedback('Form reset.', true)
+      setFeedback('Form reset.', 'info')
     })
   }
 }
