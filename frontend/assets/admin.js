@@ -21,7 +21,8 @@ const state = {
   data: {},
   ui: {
     searchQuery: '',
-    activeEntity: null
+    activeEntity: null,
+    entityMessages: {}
   }
 }
 
@@ -148,11 +149,31 @@ function setGlobalAlert(message, isSuccess = false) {
   el.classList.toggle('success', Boolean(isSuccess))
 }
 
-function setEntityStatus(entity, message, isSuccess = false) {
+function setEntityStatus(entity, message, isSuccess = false, { persist = true } = {}) {
   const el = document.querySelector(`[data-entity-status="${entity}"]`)
   if (!el) return
-  el.textContent = message || ''
+  const textEl = el.querySelector(`[data-entity-status-text="${entity}"]`)
+  if (!message) {
+    if (persist && state.ui.entityMessages) {
+      delete state.ui.entityMessages[entity]
+    }
+    if (textEl) {
+      textEl.textContent = ''
+    }
+    el.hidden = true
+    el.classList.remove('success')
+    return
+  }
+  if (persist && state.ui.entityMessages) {
+    state.ui.entityMessages[entity] = { message, isSuccess }
+  }
+  if (textEl) {
+    textEl.textContent = message
+  } else {
+    el.textContent = message
+  }
   el.classList.toggle('success', Boolean(isSuccess))
+  el.hidden = false
 }
 
 function renderEntityNav() {
@@ -541,9 +562,22 @@ function renderEntityCard(entityKey, meta, rows) {
 
   card.appendChild(buildTable(entityKey, meta, rows))
   const status = document.createElement('div')
-  status.className = 'form-feedback'
+  status.className = 'entity-message'
   status.dataset.entityStatus = entityKey
+  status.hidden = true
+  const statusText = document.createElement('span')
+  statusText.dataset.entityStatusText = entityKey
+  status.appendChild(statusText)
+  const statusActions = document.createElement('div')
+  statusActions.className = 'entity-message__actions'
+  const dismissButton = document.createElement('button')
+  dismissButton.type = 'button'
+  dismissButton.textContent = 'Dismiss'
+  dismissButton.dataset.entityStatusDismiss = entityKey
+  statusActions.appendChild(dismissButton)
+  status.appendChild(statusActions)
   card.appendChild(status)
+  restoreEntityStatus(entityKey)
 
   // Create form
   const createForm = document.createElement('form')
@@ -701,14 +735,17 @@ async function handleAdminFormSubmit(event) {
   event.preventDefault()
   const entity = form.dataset.entity
   const action = form.dataset.action
+  const entityLabel = state.metadata[entity]?.label || 'Record'
   setEntityStatus(entity, 'Submitting…', true)
   try {
+    let successMessage = `${entityLabel} updated successfully.`
     if (action === 'create') {
       const values = collectFieldValues(form)
       await fetchJson(ENTITY_ENDPOINT, {
         method: 'POST',
         body: JSON.stringify({ entity, values })
       })
+      successMessage = `${entityLabel} added successfully.`
     } else if (action === 'update') {
       const recordId = getRecordId(form)
       if (!recordId) {
@@ -724,6 +761,7 @@ async function handleAdminFormSubmit(event) {
         method: 'PUT',
         body: JSON.stringify({ values })
       })
+      successMessage = `${entityLabel} updated successfully.`
     } else if (action === 'delete') {
       const recordId = getRecordId(form)
       if (!recordId) {
@@ -733,9 +771,10 @@ async function handleAdminFormSubmit(event) {
       await fetchJson(`${ENTITY_ENDPOINT}/${entity}/${encodeURIComponent(recordId)}`, {
         method: 'DELETE'
       })
+      successMessage = `${entityLabel} removed successfully.`
     }
-    setEntityStatus(entity, 'Operation successful.', true)
     await loadOverview()
+    setEntityStatus(entity, successMessage, true)
   } catch (error) {
     console.error('Admin form error', error)
     setEntityStatus(entity, error.message || 'Request failed.', false)
@@ -784,6 +823,14 @@ function handleEntitySearchInput(event) {
   filterEntityTableRows(entity, input.value)
 }
 
+function handleEntityStatusDismiss(event) {
+  const button = event.target.closest('[data-entity-status-dismiss]')
+  if (!button) return
+  const entity = button.dataset.entityStatusDismiss
+  if (!entity) return
+  setEntityStatus(entity, '')
+}
+
 function expandCollapseEntities(open) {
   document.querySelectorAll('[data-entity-actions]').forEach((details) => {
     details.open = open
@@ -803,6 +850,7 @@ function bindEvents() {
   if (sections) {
     sections.addEventListener('submit', handleAdminFormSubmit)
     sections.addEventListener('input', handleEntitySearchInput)
+    sections.addEventListener('click', handleEntityStatusDismiss)
   }
   const refreshButton = $(selectors.refreshButton)
   if (refreshButton) {
@@ -836,3 +884,11 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init)
+function restoreEntityStatus(entityKey) {
+  const stored = state.ui.entityMessages?.[entityKey]
+  if (stored && stored.message) {
+    setEntityStatus(entityKey, stored.message, stored.isSuccess, { persist: false })
+  } else {
+    setEntityStatus(entityKey, '', false, { persist: false })
+  }
+}
