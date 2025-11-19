@@ -14,6 +14,11 @@ export interface AdminFieldConfig {
   options?: AdminFieldOption[]
 }
 
+export interface AdminCascadeDependency {
+  entity: string
+  reference: Record<string, string>
+}
+
 export interface AdminEntityConfig {
   key: string
   label: string
@@ -22,6 +27,7 @@ export interface AdminEntityConfig {
   autoIncrement: boolean
   fields: AdminFieldConfig[]
   defaultSort?: [string, 'asc' | 'desc']
+  cascadeDelete?: AdminCascadeDependency[]
 }
 
 const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
@@ -51,7 +57,11 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'location_id', label: 'Location ID', type: 'number' },
       { column: 'loyalty_points', label: 'Loyalty Points', type: 'number' }
     ],
-    defaultSort: ['client_id', 'asc']
+    defaultSort: ['client_id', 'asc'],
+    cascadeDelete: [
+      { entity: 'orders', reference: { client_id: 'client_id' } },
+      { entity: 'subscriptions', reference: { client_id: 'client_id' } }
+    ]
   },
   farms: {
     label: 'Farms',
@@ -63,7 +73,10 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'name', label: 'Farm Name', type: 'text' },
       { column: 'location_id', label: 'Location ID', type: 'number' }
     ],
-    defaultSort: ['farm_id', 'asc']
+    defaultSort: ['farm_id', 'asc'],
+    cascadeDelete: [
+      { entity: 'farmproducts', reference: { farm_id: 'farm_id' } }
+    ]
   },
   locations: {
     label: 'Locations',
@@ -78,7 +91,13 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'city', label: 'City', type: 'text' },
       { column: 'street', label: 'Street', type: 'text' }
     ],
-    defaultSort: ['location_id', 'asc']
+    defaultSort: ['location_id', 'asc'],
+    cascadeDelete: [
+      { entity: 'orders', reference: { location_id: 'location_id' } },
+      { entity: 'subscriptions', reference: { location_id: 'location_id' } },
+      { entity: 'clients', reference: { location_id: 'location_id' } },
+      { entity: 'farms', reference: { location_id: 'location_id' } }
+    ]
   },
   products: {
     label: 'Raw Products',
@@ -104,7 +123,10 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'start_season', label: 'Season Start', type: 'date' },
       { column: 'end_season', label: 'Season End', type: 'date' }
     ],
-    defaultSort: ['product_id', 'asc']
+    defaultSort: ['product_id', 'asc'],
+    cascadeDelete: [
+      { entity: 'farmproducts', reference: { product_id: 'product_id' } }
+    ]
   },
   inventory: {
     label: 'Inventory',
@@ -121,7 +143,10 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'exp_date', label: 'Expiration Date', type: 'date' },
       { column: 'quantity', label: 'Quantity', type: 'number' }
     ],
-    defaultSort: ['batch_id', 'desc']
+    defaultSort: ['batch_id', 'desc'],
+    cascadeDelete: [
+      { entity: 'orders', reference: { batch_id: 'batch_id' } }
+    ]
   },
   orders: {
     label: 'Orders',
@@ -181,7 +206,17 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'population', label: 'Population', type: 'number' },
       { column: 'population_unit', label: 'Population Unit', type: 'text' }
     ],
-    defaultSort: ['product_id', 'asc']
+    defaultSort: ['product_id', 'asc'],
+    cascadeDelete: [
+      {
+        entity: 'inventory',
+        reference: { product_id: 'product_id', farm_id: 'farm_id' }
+      },
+      {
+        entity: 'subscriptions',
+        reference: { product_id: 'product_id', farm_id: 'farm_id' }
+      }
+    ]
   }
 }
 

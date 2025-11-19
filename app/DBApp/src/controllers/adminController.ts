@@ -1,6 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http'
+import type { Knex } from 'knex'
 import knex from '../models/knexfile'
 import { readBody, sendJson } from '../lib/http'
+import { httpError } from '../lib/errors'
 import { requireSession } from '../services/sessionService'
 import {
   adminMetadataSnapshot,
@@ -10,6 +12,7 @@ import {
   parseAdminIdentifier,
   sanitizeAdminPayload
 } from '../services/adminMetadata'
+import type { AdminEntityConfig } from '../services/adminMetadata'
 
 export async function handleAdminOverview(request: IncomingMessage, response: ServerResponse) {
   const session = await requireSession(request, response, 'admin')
@@ -108,17 +111,59 @@ export async function handleAdminEntityUpdate(request: IncomingMessage, response
   }
 }
 
+async function cascadeDeleteEntity(
+  trx: Knex.Transaction,
+  config: AdminEntityConfig,
+  keyWhere: Record<string, any>,
+  { strict = false }: { strict?: boolean } = {}
+): Promise<boolean> {
+  const record = await trx(config.table).where(keyWhere).first()
+  if (!record) {
+    if (strict) {
+      throw httpError(404, 'Record not found.')
+    }
+    return false
+  }
+  const dependencies = config.cascadeDelete || []
+  for (const dependency of dependencies) {
+    const childConfig = getAdminEntityConfig(dependency.entity)
+    const childWhere: Record<string, any> = {}
+    let hasAllValues = true
+    for (const [childColumn, parentColumn] of Object.entries(dependency.reference)) {
+      const value = record[parentColumn]
+      if (value === undefined || value === null) {
+        hasAllValues = false
+        break
+      }
+      childWhere[childColumn] = value
+    }
+    if (!hasAllValues) {
+      continue
+    }
+    const childRows = await trx(childConfig.table)
+      .where(childWhere)
+      .select(childConfig.primaryKey)
+    for (const childRow of childRows) {
+      const childKeyWhere = childConfig.primaryKey.reduce((acc, column) => {
+        acc[column] = childRow[column]
+        return acc
+      }, {} as Record<string, any>)
+      await cascadeDeleteEntity(trx, childConfig, childKeyWhere)
+    }
+  }
+  await trx(config.table).where(keyWhere).delete()
+  return true
+}
+
 export async function handleAdminEntityDelete(request: IncomingMessage, response: ServerResponse, entityName: string, identifier: string) {
   const session = await requireSession(request, response, 'admin')
   if (!session) return
   try {
     const config = getAdminEntityConfig(entityName)
     const keyWhere = parseAdminIdentifier(config, identifier)
-    const affected = await knex(config.table).where(keyWhere).delete()
-    if (!affected) {
-      sendJson(response, 404, { error: 'Record not found.' })
-      return
-    }
+    await knex.transaction(async (trx) => {
+      await cascadeDeleteEntity(trx, config, keyWhere, { strict: true })
+    })
     sendJson(response, 200, {
       line: 'Record deleted.',
       entity: config.key
