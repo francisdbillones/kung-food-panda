@@ -279,21 +279,43 @@ function buildFieldInputs(meta, { skipPrimary, prefix } = {}) {
     formGroup.className = 'form-group'
     const label = document.createElement('label')
     label.textContent = field.label
-    const input = document.createElement('input')
-    input.dataset.fieldInput = field.column
-    if (field.type === 'number') {
-      input.type = 'number'
-      input.step = 'any'
-    } else if (field.type === 'date') {
-      input.type = 'date'
+    let input
+    if (field.options?.length) {
+      input = document.createElement('select')
+      input.dataset.fieldInput = field.column
+      const blankOption = document.createElement('option')
+      blankOption.value = ''
+      blankOption.textContent = prefix === 'update' ? 'Leave unchanged' : 'Select a value'
+      if (prefix !== 'update') {
+        blankOption.selected = true
+      }
+      input.appendChild(blankOption)
+      field.options.forEach((option) => {
+        const opt = document.createElement('option')
+        opt.value = String(option.value)
+        opt.textContent = option.label
+        input.appendChild(opt)
+      })
+      if (field.readOnly) {
+        input.disabled = true
+      }
     } else {
-      input.type = 'text'
-    }
-    if (field.readOnly) {
-      input.readOnly = true
-    }
-    if (prefix === 'update') {
-      input.placeholder = 'Leave blank to skip'
+      input = document.createElement('input')
+      input.dataset.fieldInput = field.column
+      if (field.type === 'number') {
+        input.type = 'number'
+        input.step = 'any'
+      } else if (field.type === 'date') {
+        input.type = 'date'
+      } else {
+        input.type = 'text'
+      }
+      if (field.readOnly) {
+        input.readOnly = true
+      }
+      if (prefix === 'update') {
+        input.placeholder = 'Leave blank to skip'
+      }
     }
     formGroup.appendChild(label)
     formGroup.appendChild(input)
