@@ -88,6 +88,27 @@ def fetch_order_breakdown(cursor, farm_id: int, start_date: str, end_date: str):
     return list(cursor.fetchall())
 
 
+def fetch_monthly_order_breakdown(cursor, farm_id: int, start_date: str, end_date: str):
+    cursor.execute("""
+        SELECT rp.product_id,
+               rp.product_name,
+               rp.product_type,
+               rp.grade,
+               DATE_FORMAT(o.order_date, '%Y-%m-01') AS month_start,
+               SUM(o.quantity) AS total_quantity,
+               SUM(o.quantity * inv.price) AS total_revenue,
+               COUNT(o.order_id) AS orders_count
+        FROM Orders AS o
+        JOIN Inventory AS inv ON o.batch_id = inv.batch_id
+        JOIN RawProduct AS rp ON inv.product_id = rp.product_id
+        WHERE inv.farm_id = %s
+          AND o.order_date BETWEEN %s AND %s
+        GROUP BY rp.product_id, rp.product_name, rp.product_type, rp.grade, month_start
+        ORDER BY rp.product_name ASC, month_start ASC
+    """, (farm_id, start_date, end_date))
+    return list(cursor.fetchall())
+
+
 def safe_number(value: Any, fallback: str = '0') -> str:
     try:
         number = float(value)
@@ -106,14 +127,57 @@ def safe_currency(value: Any) -> str:
     return f'₱{number:,.2f}'
 
 
-def count_months(start_date: str, end_date: str) -> int:
+def month_range(start_date: str, end_date: str) -> List[str]:
+    months: List[str] = []
     try:
-        start = datetime.fromisoformat(start_date).replace(day=1)
+        current = datetime.fromisoformat(start_date).replace(day=1)
         end = datetime.fromisoformat(end_date).replace(day=1)
     except ValueError:
-        return 1
-    months = (end.year - start.year) * 12 + (end.month - start.month) + 1
-    return max(months, 1)
+        return months
+    while current <= end:
+        months.append(current.strftime('%Y-%m-01'))
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+    return months or [start_date]
+
+
+def format_month_label(value: str) -> str:
+    try:
+        dt = datetime.fromisoformat(value)
+        return dt.strftime('%b %Y')
+    except ValueError:
+        return value or '—'
+
+
+def build_monthly_dataset(products: List[Dict[str, Any]], monthly_rows: List[Dict[str, Any]], months: List[str]):
+    template = {month: {'quantity': 0.0, 'revenue': 0.0, 'orders': 0} for month in months}
+    dataset: Dict[int, Dict[str, Any]] = {}
+    for product in products:
+        dataset[product['product_id']] = {
+            'product': product,
+            'months': {month: template[month].copy() for month in months}
+        }
+    for row in monthly_rows:
+        product_id = row['product_id']
+        entry = dataset.setdefault(product_id, {
+            'product': {
+                'product_id': product_id,
+                'product_name': row.get('product_name') or f"Product #{product_id}",
+                'product_type': row.get('product_type'),
+                'grade': row.get('grade')
+            },
+            'months': {month: template[month].copy() for month in months}
+        })
+        month = row.get('month_start')
+        if month not in entry['months']:
+            continue
+        bucket = entry['months'][month]
+        bucket['quantity'] += float(row.get('total_quantity') or 0)
+        bucket['revenue'] += float(row.get('total_revenue') or 0)
+        bucket['orders'] += int(row.get('orders_count') or 0)
+    return dataset
 
 
 def build_summary_text(filters: Dict[str, Any]) -> str:
@@ -132,7 +196,7 @@ def page_hero(pdf: PdfPages, farm: Dict[str, Any], filters: Dict[str, Any], summ
         ('Orders fulfilled', safe_number(summary.get('totalOrders'))),
         ('Units sold', safe_number(summary.get('totalQuantity'))),
         ('Products involved', safe_number(summary.get('productCount'))),
-        ('Avg monthly revenue', safe_currency(summary.get('avgMonthlyRevenue')))
+        ('Revenue captured', safe_currency(summary.get('totalRevenue')))
     ]
     y = 0.77
     for label, value in highlights:
@@ -167,26 +231,47 @@ def page_charts(pdf: PdfPages, products: List[Dict[str, Any]]):
     plt.close(fig)
 
 
-def page_table(pdf: PdfPages, products: List[Dict[str, Any]]):
-    fig = plt.figure(figsize=(8.5, 11))
-    fig.subplots_adjust(left=0.05, right=0.95, top=0.92)
-    ax = fig.add_subplot(111)
-    ax.axis('off')
-    columns = ['Product', 'Orders', 'Units', 'Revenue']
-    rows = []
-    for item in products:
-        rows.append([
-            item.get('product_name') or 'Product',
-            safe_number(item.get('orders_count')),
-            safe_number(item.get('total_quantity')),
-            safe_currency(item.get('total_revenue'))
-        ])
-    table = ax.table(cellText=rows, colLabels=columns, loc='center', cellLoc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1, 1.2)
-    pdf.savefig(fig)
-    plt.close(fig)
+def page_product_breakdowns(pdf: PdfPages, products: List[Dict[str, Any]], monthly_dataset: Dict[int, Dict[str, Any]], months: List[str]):
+    if not products:
+        fig = plt.figure(figsize=(8.5, 11))
+        fig.text(0.3, 0.5, 'No products recorded for the selected window.', fontsize=13, color='#6b5b53')
+        pdf.savefig(fig)
+        plt.close(fig)
+        return
+    month_labels = [format_month_label(month) for month in months]
+    for product in products:
+        data = monthly_dataset.get(product['product_id']) or {'months': {month: {'revenue': 0, 'quantity': 0, 'orders': 0} for month in months}}
+        fig = plt.figure(figsize=(8.5, 11))
+        fig.subplots_adjust(top=0.9)
+        title = f"{product.get('product_name') or 'Product'} · {product.get('product_type') or 'Type'}"
+        fig.suptitle(title, fontsize=16, weight='bold')
+        gs = fig.add_gridspec(2, 1, height_ratios=[1, 1])
+        ax_table = fig.add_subplot(gs[0])
+        ax_chart = fig.add_subplot(gs[1])
+        ax_table.axis('off')
+        columns = ['Month', 'Orders', 'Units', 'Revenue']
+        rows = []
+        chart_values = []
+        for month, label in zip(months, month_labels):
+            entry = data['months'].get(month, {'orders': 0, 'quantity': 0, 'revenue': 0})
+            rows.append([
+                label,
+                safe_number(entry.get('orders')),
+                safe_number(entry.get('quantity')),
+                safe_currency(entry.get('revenue'))
+            ])
+            chart_values.append(entry.get('revenue', 0))
+        table = ax_table.table(cellText=rows, colLabels=columns, loc='center', cellLoc='center')
+        table.auto_set_font_size(False)
+        table.set_fontsize(9)
+        table.scale(1, 1.2)
+        ax_chart.plot(month_labels, chart_values, marker='o', color='#4a90e2')
+        ax_chart.set_title('Monthly revenue trend')
+        ax_chart.set_ylabel('Revenue (₱)')
+        ax_chart.tick_params(axis='x', rotation=45)
+        ax_chart.grid(alpha=0.2)
+        pdf.savefig(fig)
+        plt.close(fig)
 
 
 def main():
@@ -195,6 +280,9 @@ def main():
         'startDateFrom': args.start_date,
         'startDateTo': args.end_date
     }
+    months = month_range(args.start_date, args.end_date)
+    if not months:
+        months = [args.start_date]
     conn = connect_db()
     try:
         cursor = conn.cursor(dictionary=True)
@@ -202,9 +290,9 @@ def main():
         if not farm:
             raise SystemExit('Farm not found.')
         products = fetch_order_breakdown(cursor, args.farm_id, args.start_date, args.end_date)
+        monthly_rows = fetch_monthly_order_breakdown(cursor, args.farm_id, args.start_date, args.end_date)
     finally:
         conn.close()
-    months_tracked = count_months(args.start_date, args.end_date)
     total_orders = sum(item.get('orders_count') or 0 for item in products)
     total_quantity = sum(item.get('total_quantity') or 0 for item in products)
     total_revenue = sum(item.get('total_revenue') or 0 for item in products)
@@ -212,17 +300,16 @@ def main():
         'totalOrders': total_orders,
         'totalQuantity': total_quantity,
         'totalRevenue': total_revenue,
-        'productCount': len(products),
-        'avgMonthlyRevenue': (total_revenue / months_tracked) if months_tracked else 0,
-        'monthsTracked': months_tracked
+        'productCount': len(products)
     }
     FRONTEND_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     output_path = Path(args.output) if args.output else FRONTEND_REPORTS_DIR / f"order-sales-report-{args.farm_id}-{args.start_date}-{args.end_date}.pdf"
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    monthly_dataset = build_monthly_dataset(products, monthly_rows, months)
     with PdfPages(output_path) as pdf:
         page_hero(pdf, farm, filters, summary)
         page_charts(pdf, products)
-        page_table(pdf, products)
+        page_product_breakdowns(pdf, products, monthly_dataset, months)
     print(json.dumps({
         'path': str(output_path.resolve()),
         'publicUrl': f"/reports/{output_path.name}"
