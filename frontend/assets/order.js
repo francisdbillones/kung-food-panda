@@ -15,6 +15,8 @@ const selectors = {
   filterSeason: '[data-filter-season]',
   filterPriceMin: '[data-filter-price-min]',
   filterPriceMax: '[data-filter-price-max]',
+  filterWeightMin: '[data-filter-weight-min]',
+  filterWeightMax: '[data-filter-weight-max]',
   filterReset: '[data-filter-reset]',
   sortSelect: '[data-sort-select]',
   viewGrid: '[data-view-grid]',
@@ -26,6 +28,11 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
   currency: 'PHP'
 })
 
+const weightFormatter = new Intl.NumberFormat('en-PH', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+})
+
 const state = {
   inventory: [],
   filters: {
@@ -35,7 +42,9 @@ const state = {
     grade: '',
     season: '',
     priceMin: null,
-    priceMax: null
+    priceMax: null,
+    weightMin: null,
+    weightMax: null
   },
   sort: 'alpha-asc',
   view: 'grid',
@@ -54,6 +63,12 @@ function setText(selector, value) {
 
 function formatCurrency(value) {
   return currencyFormatter.format(Number(value) || 0)
+}
+
+function formatUnitWeight(value, fallback = 'Weight TBD') {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return fallback
+  return `${weightFormatter.format(number)} kg/unit`
 }
 
 function setLoyalty(points) {
@@ -105,8 +120,18 @@ function isInSeason(item) {
 }
 
 function filterInventory() {
+  const {
+    search,
+    product,
+    farm,
+    grade,
+    season,
+    priceMin,
+    priceMax,
+    weightMin,
+    weightMax
+  } = state.filters
   return state.inventory.filter((item) => {
-    const { search, product, farm, grade, season, priceMin, priceMax } = state.filters
     if (product && item.productName !== product) return false
     if (farm && String(item.farmId) !== String(farm)) return false
     if (grade && item.productGrade !== grade) return false
@@ -114,6 +139,8 @@ function filterInventory() {
     if (season === 'off-season' && isInSeason(item)) return false
     if (priceMin != null && item.price < priceMin) return false
     if (priceMax != null && item.price > priceMax) return false
+    if (weightMin != null && (item.weight == null || item.weight < weightMin)) return false
+    if (weightMax != null && (item.weight == null || item.weight > weightMax)) return false
     if (search) {
       const term = search.toLowerCase()
       const label = `${item.productName} ${item.productType || ''} grade ${item.productGrade || ''} farm #${item.farmId} ${item.farmLocation || ''}`.toLowerCase()
@@ -140,6 +167,22 @@ function sortInventory(items) {
       break
     case 'exp-desc':
       sorted.sort((a, b) => new Date(b.expDate || '0001-01-01') - new Date(a.expDate || '0001-01-01'))
+      break
+    case 'weight-asc':
+      sorted.sort((a, b) => {
+        const aw = a.weight != null ? a.weight : Infinity
+        const bw = b.weight != null ? b.weight : Infinity
+        const diff = aw - bw
+        return Number.isNaN(diff) ? 0 : diff
+      })
+      break
+    case 'weight-desc':
+      sorted.sort((a, b) => {
+        const aw = a.weight != null ? a.weight : -Infinity
+        const bw = b.weight != null ? b.weight : -Infinity
+        const diff = bw - aw
+        return Number.isNaN(diff) ? 0 : diff
+      })
       break
     case 'alpha-asc':
     default:
@@ -171,6 +214,8 @@ function renderCatalog(items) {
     meta.textContent = `${item.productType || 'Product'} · Grade ${item.productGrade || '—'}`
     const priceLine = document.createElement('p')
     priceLine.textContent = `${formatCurrency(item.price)} · Farm #${item.farmId}`
+    const weightLine = document.createElement('small')
+    weightLine.textContent = formatUnitWeight(item.weight)
     const season = document.createElement('small')
     season.textContent = item.seasonStart && item.seasonEnd
       ? `Season: ${item.seasonStart} – ${item.seasonEnd}`
@@ -186,6 +231,7 @@ function renderCatalog(items) {
     card.appendChild(title)
     card.appendChild(meta)
     card.appendChild(priceLine)
+    card.appendChild(weightLine)
     card.appendChild(location)
     card.appendChild(season)
     card.appendChild(quantity)
@@ -259,6 +305,8 @@ function attachFilterEvents() {
   }
   const priceMin = $(selectors.filterPriceMin)
   const priceMax = $(selectors.filterPriceMax)
+  const weightMin = $(selectors.filterWeightMin)
+  const weightMax = $(selectors.filterWeightMax)
   if (priceMin) {
     priceMin.addEventListener('input', (event) => {
       const value = Number(event.target.value)
@@ -273,10 +321,34 @@ function attachFilterEvents() {
       applyFilters(true)
     })
   }
+  if (weightMin) {
+    weightMin.addEventListener('input', (event) => {
+      const value = Number(event.target.value)
+      state.filters.weightMin = Number.isNaN(value) ? null : value
+      applyFilters(true)
+    })
+  }
+  if (weightMax) {
+    weightMax.addEventListener('input', (event) => {
+      const value = Number(event.target.value)
+      state.filters.weightMax = Number.isNaN(value) ? null : value
+      applyFilters(true)
+    })
+  }
   const resetButton = $(selectors.filterReset)
   if (resetButton) {
     resetButton.addEventListener('click', () => {
-      state.filters = { search: '', product: '', farm: '', grade: '', season: '', priceMin: null, priceMax: null }
+      state.filters = {
+        search: '',
+        product: '',
+        farm: '',
+        grade: '',
+        season: '',
+        priceMin: null,
+        priceMax: null,
+        weightMin: null,
+        weightMax: null
+      }
       if (searchInput) searchInput.value = ''
       if (productSelect) productSelect.value = ''
       if (farmSelect) farmSelect.value = ''
@@ -284,6 +356,8 @@ function attachFilterEvents() {
       if (seasonSelect) seasonSelect.value = ''
       if (priceMin) priceMin.value = ''
       if (priceMax) priceMax.value = ''
+      if (weightMin) weightMin.value = ''
+      if (weightMax) weightMax.value = ''
       applyFilters(true)
     })
   }
@@ -352,7 +426,8 @@ async function loadCatalog() {
       farmId: item.farmId,
       price: Number(item.price),
       quantity: Number(item.quantity) || 0,
-      farmLocation: item.farmLocation
+      farmLocation: item.farmLocation,
+      weight: item.weight != null ? Number(item.weight) : null
     }))
     state.page = 1
     setLoyalty(Number(data.profile?.loyaltyPoints) || 0)
