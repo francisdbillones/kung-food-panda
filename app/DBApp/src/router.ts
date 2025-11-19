@@ -43,6 +43,8 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
   const farmerOfferingMatch = pathname.match(/^\/api\/farmer\/offerings\/(\d+)$/)
   const customerSubscriptionMatch = pathname.match(/^\/api\/customer\/subscriptions\/(\d+)$/)
   const adminEntityMatch = pathname.match(/^\/api\/admin\/entities\/([^/]+)\/([^/]+)$/)
+  const adminEntityName = adminEntityMatch ? decodeURIComponent(adminEntityMatch[1]) : null
+  const adminEntityIdentifier = adminEntityMatch ? decodeURIComponent(adminEntityMatch[2]) : null
 
   try {
     if (request.method === 'GET' && await redirectLoggedInUsers(request, response, pathname)) {
@@ -120,12 +122,12 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
       await handleAdminEntityCreate(request, response)
       return
     }
-    if (adminEntityMatch && request.method === 'PUT') {
-      await handleAdminEntityUpdate(request, response, adminEntityMatch[1], adminEntityMatch[2])
+    if (adminEntityName && adminEntityIdentifier && request.method === 'PUT') {
+      await handleAdminEntityUpdate(request, response, adminEntityName, adminEntityIdentifier)
       return
     }
-    if (adminEntityMatch && request.method === 'DELETE') {
-      await handleAdminEntityDelete(request, response, adminEntityMatch[1], adminEntityMatch[2])
+    if (adminEntityName && adminEntityIdentifier && request.method === 'DELETE') {
+      await handleAdminEntityDelete(request, response, adminEntityName, adminEntityIdentifier)
       return
     }
     if (request.method === 'GET' && pathname === '/api/farmer/dashboard') {
