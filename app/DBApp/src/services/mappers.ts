@@ -94,6 +94,7 @@ export function mapInventoryRow(row: any) {
     productGrade: row.grade,
     seasonStart: toISODate(row.start_season),
     seasonEnd: toISODate(row.end_season),
+    farmName: row.farm_name || null,
     farmLocation: [row.city, row.state, row.country].filter(Boolean).join(', ') || 'Location TBD'
   }
 }
@@ -128,6 +129,7 @@ export function mapFarmOffer(row: any) {
   const locationLabel = [row.city, row.state, row.country].filter(Boolean).join(', ') || 'Location TBD'
   return {
     farmId: row.farm_id,
+    farmName: row.farm_name || null,
     locationLabel,
     batchCount: Number(row.batch_count) || 0,
     totalQuantity: Number(row.total_quantity) || 0,
@@ -143,6 +145,7 @@ export function mapFarmRow(row: any) {
   return {
     farmId: row.farm_id,
     locationId: row.location_id,
+    name: row.farm_name || row.name || null,
     locationLabel: formatLocationLabel(row),
     city: row.city,
     state: row.state,

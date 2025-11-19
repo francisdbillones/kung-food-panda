@@ -120,7 +120,8 @@ function populateFarms(offers) {
   offers.forEach((offer) => {
     const option = document.createElement('option')
     option.value = offer.farmId
-    option.textContent = `Farm #${offer.farmId} · ${offer.locationLabel}`
+    const name = offer.farmName || 'Partner farm'
+    option.textContent = `${name} · ${offer.locationLabel}`
     select.appendChild(option)
   })
   select.disabled = false

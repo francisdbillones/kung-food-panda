@@ -29,180 +29,221 @@
   </header>
 
   <main>
-    <section class="card">
-      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:space-between; align-items:flex-start;">
-        <div>
-          <h1>Farmer operations console</h1>
-          <p class="subtitle">Update stock in real time, issue subscription quotes, and record every delivery straight from the database.</p>
-          <p><strong>Farm ID:</strong> <span data-farm-id>—</span></p>
-          <p><strong>Farm name:</strong> <span data-farm-name>Loading…</span></p>
-          <p><strong>Location:</strong> <span data-farm-location>Loading…</span></p>
-        </div>
-        <div class="quick-actions" style="justify-content:flex-end;">
-          <button class="button" type="button" data-refresh-dashboard>Refresh data</button>
-          <a class="button outline" href="login.html#farmer">Switch farm</a>
-        </div>
-      </div>
-      <div class="form-feedback" data-dashboard-alert role="alert"></div>
-    </section>
-
-    <section class="grid">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+    <div class="console-tabs">
+      <button class="tab active" type="button" data-tab-button="operations">Operations</button>
+      <button class="tab" type="button" data-tab-button="reports">Reports</button>
+    </div>
+    <div data-tab-content="operations">
+      <section class="card">
+        <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:space-between; align-items:flex-start;">
           <div>
-            <h2>Inventory management</h2>
-            <small>Update prices, weights, or quantities per batch. Add new batches once stock is harvested.</small>
+            <h1>Farmer operations console</h1>
+            <p class="subtitle">Update stock in real time, issue subscription quotes, and record every delivery straight from the database.</p>
+            <p><strong>Farm ID:</strong> <span data-farm-id>—</span></p>
+            <p><strong>Farm name:</strong> <span data-farm-name>Loading…</span></p>
+            <p><strong>Location:</strong> <span data-farm-location>Loading…</span></p>
           </div>
-          <span><strong data-inventory-count>0</strong> products tracked</span>
+          <div class="quick-actions" style="justify-content:flex-end;">
+            <button class="button" type="button" data-refresh-dashboard>Refresh data</button>
+            <a class="button outline" href="login.html#farmer">Switch farm</a>
+          </div>
         </div>
-        <div class="form-feedback" data-inventory-alert role="alert"></div>
-        <div class="management-list" data-inventory-products></div>
-        <p class="subtitle" data-inventory-empty hidden>No inventory recorded yet. Add a batch below.</p>
-        <h3 style="margin-top:2rem;">Add new batch</h3>
-        <form data-inventory-form>
-          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-            <div class="form-group">
-              <label for="invProduct">Product</label>
-              <select id="invProduct" data-inventory-product required>
-                <option value="">Loading offerings…</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="invPrice">Price (₱)</label>
-              <input id="invPrice" name="price" type="number" step="0.01" min="0" required>
-            </div>
-            <div class="form-group">
-              <label for="invWeight">Weight (kg)</label>
-              <input id="invWeight" name="weight" type="number" step="0.01" min="0.01" required>
-            </div>
-            <div class="form-group">
-              <label for="invQty">Quantity</label>
-              <input id="invQty" name="quantity" type="number" min="1" required>
-            </div>
-            <div class="form-group">
-              <label for="invExp">Expiration</label>
-              <input id="invExp" name="expDate" type="date" required>
-            </div>
-            <div class="form-group">
-              <label for="invNotes">Notes</label>
-              <input id="invNotes" name="notes" type="text" placeholder="Optional">
-            </div>
-          </div>
-          <button class="button" type="submit" style="margin-top:1rem;">Add batch</button>
-        </form>
-      </div>
+        <div class="form-feedback" data-dashboard-alert role="alert"></div>
+      </section>
 
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
-          <div>
-            <h2>Order fulfillment</h2>
-            <small>Match open purchase orders to available batches, then mark them as shipped.</small>
+      <section class="grid">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <div>
+              <h2>Inventory management</h2>
+              <small>Update prices, weights, or quantities per batch. Add new batches once stock is harvested.</small>
+            </div>
+            <span><strong data-inventory-count>0</strong> products tracked</span>
           </div>
-          <span><strong data-order-count>0</strong> pending orders</span>
+          <div class="form-feedback" data-inventory-alert role="alert"></div>
+          <div class="management-list" data-inventory-products></div>
+          <p class="subtitle" data-inventory-empty hidden>No inventory recorded yet. Add a batch below.</p>
+          <h3 style="margin-top:2rem;">Add new batch</h3>
+          <form data-inventory-form>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <div class="form-group">
+                <label for="invProduct">Product</label>
+                <select id="invProduct" data-inventory-product required>
+                  <option value="">Loading offerings…</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="invPrice">Price (₱)</label>
+                <input id="invPrice" name="price" type="number" step="0.01" min="0" required>
+              </div>
+              <div class="form-group">
+                <label for="invWeight">Weight (kg)</label>
+                <input id="invWeight" name="weight" type="number" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="invQty">Quantity</label>
+                <input id="invQty" name="quantity" type="number" min="1" required>
+              </div>
+              <div class="form-group">
+                <label for="invExp">Expiration</label>
+                <input id="invExp" name="expDate" type="date" required>
+              </div>
+              <div class="form-group">
+                <label for="invNotes">Notes</label>
+                <input id="invNotes" name="notes" type="text" placeholder="Optional">
+              </div>
+            </div>
+            <button class="button" type="submit" style="margin-top:1rem;">Add batch</button>
+          </form>
         </div>
-        <div class="form-feedback" data-order-alert role="alert"></div>
-        <div class="management-list" data-order-list></div>
-        <p class="subtitle" data-order-empty hidden>No orders awaiting shipment.</p>
-        <h3 style="margin-top:2rem;">Recent shipments</h3>
-        <ul class="recent-list" data-shipment-list></ul>
-      </div>
-    </section>
 
-    <section class="grid">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
-          <div>
-            <h2>Subscriptions & quotes</h2>
-            <small>Send quotes, cancel requests, or ship recurring orders straight from this panel.</small>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <div>
+              <h2>Order fulfillment</h2>
+              <small>Match open purchase orders to available batches, then mark them as shipped.</small>
+            </div>
+            <span><strong data-order-count>0</strong> pending orders</span>
           </div>
-          <span><strong data-subscription-count>0</strong> active requests</span>
+          <div class="form-feedback" data-order-alert role="alert"></div>
+          <div class="management-list" data-order-list></div>
+          <p class="subtitle" data-order-empty hidden>No pending orders at this time.</p>
+          <div class="panel-footer">
+            <p class="muted">Fulfillments are recorded by the operations team once a shipment is confirmed.</p>
+          </div>
         </div>
-        <div class="form-feedback" data-subscription-alert role="alert"></div>
-        <div class="management-list" data-subscription-list></div>
-        <p class="subtitle" data-subscription-empty hidden>No subscriptions assigned to this farm.</p>
-      </div>
 
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <div>
+              <h2>Subscription overview</h2>
+              <small>Track quote activity, cancellations, and fulfillment cadence.</small>
+            </div>
+            <span><strong data-subscription-count>0</strong> active programs</span>
+          </div>
+          <div class="form-feedback" data-subscription-alert role="alert"></div>
+          <div class="management-list" data-subscription-list></div>
+          <p class="subtitle" data-subscription-empty hidden>No subscriptions mapped yet.</p>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <div>
+              <h2>Offerings &amp; catalogs</h2>
+              <small>Keep your farm’s product catalog in sync with the products you actually grow.</small>
+            </div>
+            <span><strong data-offering-count>0</strong> offerings live</span>
+          </div>
+          <div class="form-feedback" data-offering-alert role="alert"></div>
+          <div class="table-wrapper" style="margin-top:1rem;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Population</th>
+                  <th>Unit</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody data-offering-table></tbody>
+            </table>
+          </div>
+          <p class="subtitle" data-offering-empty hidden>No offerings configured. Add one below.</p>
+          <h3 style="margin-top:2rem;">Add product offering</h3>
+          <form data-offering-form>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+              <div class="form-group">
+                <label for="offProductMode">Product source</label>
+                <select id="offProductMode" name="productMode" data-offering-product-mode>
+                  <option value="existing" selected>Use existing product</option>
+                  <option value="new">Create new product</option>
+                </select>
+              </div>
+              <div class="form-group" data-offering-existing-fields>
+                <label for="offProduct">Existing product</label>
+                <select id="offProduct" data-offering-product required>
+                  <option value="">Loading products…</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="offPopulation">Population</label>
+                <input id="offPopulation" name="population" type="number" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label for="offPopulationUnit">Population Unit</label>
+                <input id="offPopulationUnit" name="populationUnit" type="text" placeholder="e.g. trees" required>
+              </div>
+            </div>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top:1rem;" data-offering-new-fields hidden>
+              <div class="form-group">
+                <label for="offNewName">New product name</label>
+                <input id="offNewName" name="newProductName" type="text" placeholder="e.g. Dragonfruit">
+              </div>
+              <div class="form-group">
+                <label for="offNewType">Product type</label>
+                <input id="offNewType" name="newProductType" type="text" placeholder="Fruit, grain…">
+              </div>
+              <div class="form-group">
+                <label for="offNewGrade">Grade</label>
+                <select id="offNewGrade" name="newProductGrade">
+                  <option value="">Select grade</option>
+                  <option value="SSR">SSR</option>
+                  <option value="SR">SR</option>
+                  <option value="R">R</option>
+                  <option value="UC">UC</option>
+                  <option value="C">C</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="offNewStart">Season start</label>
+                <input id="offNewStart" name="newProductStartSeason" type="date">
+              </div>
+              <div class="form-group">
+                <label for="offNewEnd">Season end</label>
+                <input id="offNewEnd" name="newProductEndSeason" type="date">
+              </div>
+            </div>
+            <button class="button" type="submit" style="margin-top:1rem;">Add offering</button>
+          </form>
+        </div>
+      </section>
+    </div>
+    <div data-tab-content="reports" hidden>
+      <section class="card reports-panel">
+        <div class="reports-panel__header">
           <div>
-            <h2>Product offerings</h2>
-            <small>Keep your farm’s product catalog in sync with the products you actually grow.</small>
+            <h2>Reports &amp; analytics</h2>
+            <p class="subtitle">Run a subscription snapshot for your farm, export insights, and deliver polished shareables.</p>
           </div>
-          <span><strong data-offering-count>0</strong> offerings live</span>
+          <div class="reports-panel__actions">
+            <button class="button tertiary" type="button" data-refresh-reports>Reload catalog</button>
+          </div>
         </div>
-        <div class="form-feedback" data-offering-alert role="alert"></div>
-        <div class="table-wrapper" style="margin-top:1rem;">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Population</th>
-                <th>Unit</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody data-offering-table></tbody>
-          </table>
+        <div class="form-feedback" data-report-alert role="alert"></div>
+        <div class="reports-panel__grid">
+          <div class="reports-list" data-report-list></div>
+          <div class="reports-panel__body">
+            <form class="reports-form" data-report-form>
+              <div class="grid reports-filter-grid">
+                <div class="form-group">
+                  <label for="reportFrom">Start date (from)</label>
+                  <input id="reportFrom" name="startDateFrom" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label for="reportTo">End date</label>
+                  <input id="reportTo" name="startDateTo" type="date" required>
+                </div>
+              </div>
+              <div class="reports-form__actions">
+                <button class="button" type="submit">Generate report</button>
+                <button class="button tertiary" type="button" data-clear-report>Reset filters</button>
+              </div>
+            </form>
+            <p class="subtitle" data-report-empty>Choose a date range to export your subscription insights.</p>
+          </div>
         </div>
-        <p class="subtitle" data-offering-empty hidden>No offerings configured. Add one below.</p>
-        <h3 style="margin-top:2rem;">Add product offering</h3>
-        <form data-offering-form>
-          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-            <div class="form-group">
-              <label for="offProductMode">Product source</label>
-              <select id="offProductMode" name="productMode" data-offering-product-mode>
-                <option value="existing" selected>Use existing product</option>
-                <option value="new">Create new product</option>
-              </select>
-            </div>
-            <div class="form-group" data-offering-existing-fields>
-              <label for="offProduct">Existing product</label>
-              <select id="offProduct" data-offering-product required>
-                <option value="">Loading products…</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="offPopulation">Population</label>
-              <input id="offPopulation" name="population" type="number" min="0" value="0" required>
-            </div>
-            <div class="form-group">
-              <label for="offPopulationUnit">Population Unit</label>
-              <input id="offPopulationUnit" name="populationUnit" type="text" placeholder="e.g. trees" required>
-            </div>
-          </div>
-          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top:1rem;" data-offering-new-fields hidden>
-            <div class="form-group">
-              <label for="offNewName">New product name</label>
-              <input id="offNewName" name="newProductName" type="text" placeholder="e.g. Dragonfruit">
-            </div>
-            <div class="form-group">
-              <label for="offNewType">Product type</label>
-              <input id="offNewType" name="newProductType" type="text" placeholder="Fruit, grain…">
-            </div>
-            <div class="form-group">
-              <label for="offNewGrade">Grade</label>
-              <select id="offNewGrade" name="newProductGrade">
-                <option value="">Select grade</option>
-                <option value="SSR">SSR</option>
-                <option value="SR">SR</option>
-                <option value="R">R</option>
-                <option value="UC">UC</option>
-                <option value="C">C</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="offNewStart">Season start</label>
-              <input id="offNewStart" name="newProductStartSeason" type="date">
-            </div>
-            <div class="form-group">
-              <label for="offNewEnd">Season end</label>
-              <input id="offNewEnd" name="newProductEndSeason" type="date">
-            </div>
-          </div>
-          <button class="button" type="submit" style="margin-top:1rem;">Add offering</button>
-        </form>
-      </div>
-    </section>
+      </section>
+    </div>
   </main>
 </body>
 </html>

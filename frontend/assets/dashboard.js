@@ -229,7 +229,7 @@ function renderSubscriptions(subscriptions) {
     const fields = [
       { label: 'Next delivery', value: formatDate(sub.nextDeliveryDate, 'TBD') },
       { label: 'Grade', value: sub.productGrade || '—' },
-      { label: 'Farm', value: sub.farmName || (sub.farmId ? `Farm #${sub.farmId}` : 'TBD') },
+      { label: 'Farm', value: sub.farmName || 'Farm selection pending' },
       { label: 'Location', value: sub.locationLabel || 'Delivery location TBD' },
       { label: 'Price', value: sub.price != null ? formatCurrency(sub.price) : 'Awaiting quote' }
     ]

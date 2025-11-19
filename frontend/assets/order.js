@@ -33,6 +33,17 @@ const weightFormatter = new Intl.NumberFormat('en-PH', {
   maximumFractionDigits: 2
 })
 
+const shortDateFormatter = new Intl.DateTimeFormat('en-PH', {
+  month: 'short',
+  day: 'numeric'
+})
+
+const longDateFormatter = new Intl.DateTimeFormat('en-PH', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+})
+
 const state = {
   inventory: [],
   filters: {
@@ -71,8 +82,29 @@ function formatUnitWeight(value, fallback = 'Weight TBD') {
   return `${weightFormatter.format(number)} kg/unit`
 }
 
+function formatSeasonLabel(start, end) {
+  if (!start || !end) return 'Season TBD'
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return 'Season TBD'
+  }
+  return `${shortDateFormatter.format(startDate)} – ${shortDateFormatter.format(endDate)}`
+}
+
+function formatExpiryDate(value) {
+  if (!value) return 'TBD'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'TBD'
+  return longDateFormatter.format(date)
+}
+
 function setLoyalty(points) {
   setText(selectors.loyaltyBalance, `${points} pts`)
+}
+
+function farmDisplayLabel(item) {
+  return item.farmName || item.farmLocation || 'Partner farm'
 }
 
 function populateFilterOptions() {
@@ -90,12 +122,12 @@ function populateFilterOptions() {
     })
   }
   if (farmSelect) {
-    const farms = Array.from(new Set(state.inventory.map((item) => item.farmId))).sort((a, b) => a - b)
+    const farms = Array.from(new Set(state.inventory.map((item) => farmDisplayLabel(item)))).sort()
     farmSelect.innerHTML = '<option value="">All farms</option>'
-    farms.forEach((farmId) => {
+    farms.forEach((farmLabel) => {
       const option = document.createElement('option')
-      option.value = farmId
-      option.textContent = `Farm #${farmId}`
+      option.value = farmLabel
+      option.textContent = farmLabel
       farmSelect.appendChild(option)
     })
   }
@@ -133,7 +165,8 @@ function filterInventory() {
   } = state.filters
   return state.inventory.filter((item) => {
     if (product && item.productName !== product) return false
-    if (farm && String(item.farmId) !== String(farm)) return false
+    const farmLabel = farmDisplayLabel(item)
+    if (farm && farmLabel !== farm) return false
     if (grade && item.productGrade !== grade) return false
     if (season === 'in-season' && !isInSeason(item)) return false
     if (season === 'off-season' && isInSeason(item)) return false
@@ -143,7 +176,7 @@ function filterInventory() {
     if (weightMax != null && (item.weight == null || item.weight > weightMax)) return false
     if (search) {
       const term = search.toLowerCase()
-      const label = `${item.productName} ${item.productType || ''} grade ${item.productGrade || ''} farm #${item.farmId} ${item.farmLocation || ''}`.toLowerCase()
+      const label = `${item.productName} ${item.productType || ''} grade ${item.productGrade || ''} ${farmDisplayLabel(item)} ${item.farmLocation || ''}`.toLowerCase()
       if (!label.includes(term)) return false
     }
     return true
@@ -213,15 +246,22 @@ function renderCatalog(items) {
     const meta = document.createElement('p')
     meta.textContent = `${item.productType || 'Product'} · Grade ${item.productGrade || '—'}`
     const priceLine = document.createElement('p')
-    priceLine.textContent = `${formatCurrency(item.price)} · Farm #${item.farmId}`
-    const weightLine = document.createElement('small')
-    weightLine.textContent = formatUnitWeight(item.weight)
-    const season = document.createElement('small')
-    season.textContent = item.seasonStart && item.seasonEnd
-      ? `Season: ${item.seasonStart} – ${item.seasonEnd}`
-      : 'Season: TBD'
-    const location = document.createElement('small')
-    location.textContent = item.farmLocation || 'Location TBD'
+    priceLine.textContent = formatCurrency(item.price)
+    const detailWrapper = document.createElement('div')
+    detailWrapper.className = 'stock-details'
+    const detailRows = [
+      { label: 'Unit weight', value: formatUnitWeight(item.weight) },
+      { label: 'Farm', value: item.farmName || item.farmLocation || 'Farm TBD' },
+      { label: 'Location', value: item.farmLocation || 'Location TBD' },
+      { label: 'Season', value: formatSeasonLabel(item.seasonStart, item.seasonEnd) },
+      { label: 'Expires', value: formatExpiryDate(item.expDate) }
+    ]
+    detailRows.forEach((detail) => {
+      const line = document.createElement('p')
+      line.className = 'stock-detail'
+      line.innerHTML = `<strong>${detail.label}:</strong> ${detail.value}`
+      detailWrapper.appendChild(line)
+    })
     const quantity = document.createElement('p')
     quantity.innerHTML = `<strong>${item.quantity}</strong> units remaining`
     const button = document.createElement('a')
@@ -231,9 +271,7 @@ function renderCatalog(items) {
     card.appendChild(title)
     card.appendChild(meta)
     card.appendChild(priceLine)
-    card.appendChild(weightLine)
-    card.appendChild(location)
-    card.appendChild(season)
+    card.appendChild(detailWrapper)
     card.appendChild(quantity)
     card.appendChild(button)
     grid.appendChild(card)

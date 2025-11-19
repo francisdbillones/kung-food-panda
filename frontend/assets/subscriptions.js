@@ -95,7 +95,7 @@ function renderRequests(subscriptions) {
     productCell.textContent = sub.productName
 
     const farmCell = document.createElement('td')
-    const farmLabel = sub.farmId ? `Farm #${sub.farmId}` : '—'
+    const farmLabel = sub.farmName || '—'
     const location = sub.locationLabel ? ` · ${sub.locationLabel}` : ''
     farmCell.textContent = `${farmLabel}${location}`
 

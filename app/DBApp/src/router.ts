@@ -32,6 +32,14 @@ import {
   handleFarmerOfferingsUpdate,
   handleFarmerSubscriptionUpdate
 } from './controllers/farmerController'
+import {
+  handleAdminReportsList,
+  handleAdminSubscriptionReport,
+  handleAdminReportPdf,
+  handleFarmerReportsList,
+  handleFarmerReportPdf,
+  handleFarmerSubscriptionReport
+} from './controllers/reportController'
 import { serveStatic } from './staticServer'
 import { sendJson } from './lib/http'
 
@@ -118,6 +126,18 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
       await handleAdminOverview(request, response)
       return
     }
+    if (request.method === 'GET' && pathname === '/api/admin/reports') {
+      await handleAdminReportsList(request, response)
+      return
+    }
+    if (request.method === 'POST' && pathname === '/api/admin/reports/subscription-clients') {
+      await handleAdminSubscriptionReport(request, response)
+      return
+    }
+    if (request.method === 'POST' && pathname === '/api/admin/reports/pdf') {
+      await handleAdminReportPdf(request, response)
+      return
+    }
     if (request.method === 'POST' && pathname === '/api/admin/entities') {
       await handleAdminEntityCreate(request, response)
       return
@@ -132,6 +152,18 @@ export async function routeRequest(request: IncomingMessage, response: ServerRes
     }
     if (request.method === 'GET' && pathname === '/api/farmer/dashboard') {
       await handleFarmerDashboard(request, response)
+      return
+    }
+    if (request.method === 'GET' && pathname === '/api/farmer/reports') {
+      await handleFarmerReportsList(request, response)
+      return
+    }
+    if (request.method === 'POST' && pathname === '/api/farmer/reports/subscription-clients') {
+      await handleFarmerSubscriptionReport(request, response)
+      return
+    }
+    if (request.method === 'POST' && pathname === '/api/farmer/reports/pdf') {
+      await handleFarmerReportPdf(request, response)
       return
     }
     if (request.method === 'POST' && pathname === '/api/farmer/inventory') {

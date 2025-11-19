@@ -1,5 +1,7 @@
 const OVERVIEW_ENDPOINT = '/api/admin/overview'
 const ENTITY_ENDPOINT = '/api/admin/entities'
+const ADMIN_REPORTS_ENDPOINT = '/api/admin/reports'
+const ADMIN_REPORT_PDF_ENDPOINT = '/api/admin/reports/pdf'
 const LOGIN_REDIRECT = '/login.html#admin'
 
 const selectors = {
@@ -13,7 +15,18 @@ const selectors = {
   collapseEntities: '[data-collapse-entities]',
   searchResults: '[data-entity-search-results]',
   searchResultsList: '[data-entity-search-list]',
-  searchResultsCount: '[data-search-results-count]'
+  searchResultsCount: '[data-search-results-count]',
+  reports: {
+    list: '[data-report-list]',
+    form: '[data-report-form]',
+    empty: '[data-report-empty]'
+  },
+  reportClearButton: '[data-clear-report]',
+  reportRefreshButton: '[data-refresh-reports]',
+  tabs: {
+    buttons: '[data-tab-button]',
+    contents: '[data-tab-content]'
+  }
 }
 
 const state = {
@@ -23,6 +36,10 @@ const state = {
     searchQuery: '',
     activeEntity: null,
     entityMessages: {}
+  },
+  reports: {
+    catalog: [],
+    activeReportId: null
   }
 }
 
@@ -147,6 +164,162 @@ function setGlobalAlert(message, isSuccess = false) {
   if (!el) return
   el.textContent = message || ''
   el.classList.toggle('success', Boolean(isSuccess))
+}
+
+function setReportAlert(message, isSuccess = false) {
+  const el = document.querySelector('[data-report-alert]')
+  if (!el) return
+  el.textContent = message || ''
+  el.classList.toggle('success', Boolean(isSuccess))
+}
+
+function defaultReportDateRange() {
+  const end = new Date()
+  end.setHours(0, 0, 0, 0)
+  const start = new Date(end)
+  start.setDate(start.getDate() - 90)
+  return {
+    from: start.toISOString().split('T')[0],
+    to: end.toISOString().split('T')[0]
+  }
+}
+
+function setReportFormDefaults({ reset = false } = {}) {
+  const form = document.querySelector(selectors.reports.form)
+  if (!form) return
+  const range = defaultReportDateRange()
+  if (reset || !form.startDateFrom.value) {
+    form.startDateFrom.value = range.from
+  }
+  if (reset || !form.startDateTo.value) {
+    form.startDateTo.value = range.to
+  }
+}
+
+function setActiveTab(tabId) {
+  document.querySelectorAll(selectors.tabs.buttons).forEach((button) => {
+    const isActive = button.dataset.tabButton === tabId
+    button.classList.toggle('active', isActive)
+  })
+  document.querySelectorAll(selectors.tabs.contents).forEach((section) => {
+    const key = section.getAttribute('data-tab-content')
+    if (!key) return
+    section.hidden = key !== tabId
+  })
+}
+
+function handleTabButtonClick(event) {
+  const button = event.currentTarget
+  const tabId = button?.dataset.tabButton
+  if (!tabId) return
+  setActiveTab(tabId)
+}
+
+function renderReportsList() {
+  const container = document.querySelector(selectors.reports.list)
+  if (!container) return
+  container.innerHTML = ''
+  const reports = state.reports.catalog || []
+  if (!reports.length) {
+    const message = document.createElement('p')
+    message.className = 'muted-text'
+    message.textContent = 'No reports configured yet.'
+    container.appendChild(message)
+    return
+  }
+  reports.forEach((report) => {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'report-card'
+    button.dataset.reportId = report.id
+    if (!state.reports.activeReportId) {
+      state.reports.activeReportId = report.id
+    }
+    if (report.id === state.reports.activeReportId) {
+      button.classList.add('active')
+    }
+    const title = document.createElement('strong')
+    title.textContent = report.title
+    const description = document.createElement('p')
+    description.className = 'muted-text'
+    description.textContent = report.description
+    button.appendChild(title)
+    button.appendChild(description)
+    container.appendChild(button)
+  })
+}
+
+function handleReportListClick(event) {
+  const target = event.target.closest('[data-report-id]')
+  if (!target) return
+  const reportId = target.dataset.reportId
+  if (!reportId || reportId === state.reports.activeReportId) {
+    return
+  }
+  state.reports.activeReportId = reportId
+  renderReportsList()
+  setReportAlert('Report selected. Choose a date window and generate.', true)
+}
+
+async function loadReportCatalog() {
+  const refreshButton = document.querySelector(selectors.reportRefreshButton)
+  if (refreshButton) refreshButton.disabled = true
+  try {
+    setReportAlert('Loading report catalog…', true)
+    const data = await fetchJson(ADMIN_REPORTS_ENDPOINT)
+    state.reports.catalog = data?.reports || []
+    state.reports.activeReportId = state.reports.catalog[0]?.id || null
+    renderReportsList()
+    setReportFormDefaults({ reset: true })
+    setReportAlert(data?.line || 'Reports ready to generate.', true)
+  } catch (error) {
+    console.error('Admin report catalog error', error)
+    setReportAlert(error.message || 'Unable to load reports.', false)
+  } finally {
+    if (refreshButton) refreshButton.disabled = false
+  }
+}
+
+function handleReportClear(event) {
+  event.preventDefault()
+  setReportFormDefaults({ reset: true })
+  setReportAlert('Filters reset. Generate to download a fresh report.', true)
+}
+
+async function submitReportForm(event) {
+  event.preventDefault()
+  const form = event.currentTarget
+  const fromValue = form.startDateFrom?.value
+  const toValue = form.startDateTo?.value
+  if (!fromValue || !toValue) {
+    setReportAlert('Select a start and end date.', false)
+    return
+  }
+  const reportId = state.reports.activeReportId
+  if (!reportId) {
+    setReportAlert('Select a report to generate.', false)
+    return
+  }
+  const payload = {
+    reportId,
+    startDateFrom: fromValue,
+    startDateTo: toValue
+  }
+  try {
+    setReportAlert('Generating report…', true)
+    const data = await fetchJson(ADMIN_REPORT_PDF_ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+    if (data?.url) {
+      window.location.href = data.url
+      return
+    }
+    setReportAlert('Report generated but no download link received.', false)
+  } catch (error) {
+    console.error('Admin report pdf error', error)
+    setReportAlert(error.message || 'Unable to generate the report.', false)
+  }
 }
 
 function setEntityStatus(entity, message, isSuccess = false, { persist = true } = {}) {
@@ -876,11 +1049,33 @@ function bindEvents() {
   if (collapseButton) {
     collapseButton.addEventListener('click', handleCollapseEntities)
   }
+  document.querySelectorAll(selectors.tabs.buttons).forEach((button) => {
+    button.addEventListener('click', handleTabButtonClick)
+  })
+  const reportList = document.querySelector(selectors.reports.list)
+  if (reportList) {
+    reportList.addEventListener('click', handleReportListClick)
+  }
+  const reportForm = document.querySelector(selectors.reports.form)
+  if (reportForm) {
+    reportForm.addEventListener('submit', submitReportForm)
+  }
+  const reportClear = document.querySelector(selectors.reportClearButton)
+  if (reportClear) {
+    reportClear.addEventListener('click', handleReportClear)
+  }
+  const reportRefresh = document.querySelector(selectors.reportRefreshButton)
+  if (reportRefresh) {
+    reportRefresh.addEventListener('click', loadReportCatalog)
+  }
 }
 
 function init() {
   bindEvents()
+  setActiveTab('operations')
+  setReportFormDefaults({ reset: true })
   loadOverview()
+  loadReportCatalog()
 }
 
 document.addEventListener('DOMContentLoaded', init)

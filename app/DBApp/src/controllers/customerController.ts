@@ -107,6 +107,7 @@ function farmOffersQuery(productId: number) {
     })
     .select(
       'fp.farm_id',
+      'f.name as farm_name',
       'loc.city',
       'loc.state',
       'loc.country'
@@ -117,7 +118,7 @@ function farmOffersQuery(productId: number) {
     .sum({ total_quantity: 'inv.quantity' })
     .count({ batch_count: 'inv.batch_id' })
     .where('fp.product_id', productId)
-    .groupBy('fp.farm_id', 'loc.city', 'loc.state', 'loc.country')
+    .groupBy('fp.farm_id', 'f.name', 'loc.city', 'loc.state', 'loc.country')
     .orderBy('fp.farm_id', 'asc')
 }
 
@@ -170,7 +171,6 @@ async function fetchCustomerDashboardData(clientId: number) {
     .where('o.client_id', clientId)
     .whereNull('o.shipped_date')
     .orderBy('o.due_by', 'asc')
-    .limit(5)
 
   const recentOrdersPromise = knex('Orders as o')
     .leftJoin('Inventory as i', 'o.batch_id', 'i.batch_id')
@@ -192,7 +192,6 @@ async function fetchCustomerDashboardData(clientId: number) {
     )
     .where('o.client_id', clientId)
     .orderBy('o.order_date', 'desc')
-    .limit(5)
 
   const subscriptionsPromise = buildSubscriptionQuery(clientId)
 
@@ -562,11 +561,12 @@ export async function handleOrderOptions(request: IncomingMessage, response: Ser
       .leftJoin('RawProduct as rp', 'inv.product_id', 'rp.product_id')
       .leftJoin('Farm as f', 'inv.farm_id', 'f.farm_id')
       .leftJoin('Location as loc', 'f.location_id', 'loc.location_id')
-      .select(
-        'inv.batch_id',
-        'inv.product_id',
-        'inv.farm_id',
-        'inv.price',
+    .select(
+      'inv.batch_id',
+      'inv.product_id',
+      'inv.farm_id',
+      'f.name as farm_name',
+      'inv.price',
         'inv.weight',
         'inv.notes',
         'inv.exp_date',
@@ -620,6 +620,7 @@ export async function handleOrderBatch(request: IncomingMessage, response: Serve
         'inv.batch_id',
         'inv.product_id',
         'inv.farm_id',
+        'f.name as farm_name',
         'inv.price',
         'inv.weight',
         'inv.notes',

@@ -110,7 +110,7 @@ function populateBatchDetails(batch, profile, location) {
   state.loyaltyPoints = Number(profile?.loyaltyPoints) || 0
   state.defaultLocation = location || null
   setText('[data-batch-product]', batch.productName)
-  setText('[data-batch-farm]', `#${batch.farmId}`)
+  setText('[data-batch-farm]', batch.farmName || batch.farmLocation || 'Farm TBD')
   setText('[data-batch-location]', batch.farmLocation || 'Location TBD')
   setText('[data-batch-price]', formatCurrency(batch.price))
   setText('[data-batch-weight]', formatUnitWeight(batch.weight))

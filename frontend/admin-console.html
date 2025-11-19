@@ -29,6 +29,11 @@
   </header>
 
   <main>
+    <div class="console-tabs">
+      <button class="tab active" type="button" data-tab-button="operations">Operations</button>
+      <button class="tab" type="button" data-tab-button="reports">Reports</button>
+    </div>
+    <div data-tab-content="operations">
     <section class="card admin-hero">
       <div class="hero-layout">
         <div>
@@ -87,6 +92,43 @@
     </section>
 
     <section class="grid" data-admin-sections></section>
+    </div>
+    <div data-tab-content="reports" hidden>
+      <section class="card reports-panel">
+        <div class="reports-panel__header">
+          <div>
+            <h2>Insights &amp; analytics</h2>
+            <p class="subtitle">Download engagement-ready dashboards such as loyalty point utilization summaries.</p>
+          </div>
+          <div class="reports-panel__actions">
+            <button class="button tertiary" type="button" data-refresh-reports>Reload catalog</button>
+          </div>
+        </div>
+        <div class="form-feedback" data-report-alert role="alert"></div>
+        <div class="reports-panel__grid">
+          <div class="reports-list" data-report-list></div>
+          <div class="reports-panel__body">
+            <form class="reports-form" data-report-form>
+              <div class="grid reports-filter-grid">
+                <div class="form-group">
+                  <label for="adminReportFrom">Start date (from)</label>
+                  <input id="adminReportFrom" name="startDateFrom" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label for="adminReportTo">End date</label>
+                  <input id="adminReportTo" name="startDateTo" type="date" required>
+                </div>
+              </div>
+              <div class="reports-form__actions">
+                <button class="button" type="submit">Generate report</button>
+                <button class="button tertiary" type="button" data-clear-report>Reset filters</button>
+              </div>
+            </form>
+            <p class="subtitle" data-report-empty>Select a date range to export the PDF report.</p>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 </body>
 </html>

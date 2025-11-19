@@ -116,9 +116,11 @@ function handleOfferSelect(offer) {
   state.selectedOffer = offer
   const selectionStatus = $(selectors.selectionStatus)
   if (selectionStatus) {
-    selectionStatus.textContent = `Requesting quote from Farm #${offer.farmId} (${offer.locationLabel}).`
+    const name = offer.farmName || 'Selected farm'
+    selectionStatus.textContent = `Requesting quote from ${name} (${offer.locationLabel}).`
   }
-  setInputValue(selectors.selectedFarm, `Farm #${offer.farmId} (${offer.locationLabel})`)
+  const displayFarm = offer.farmName || 'Selected farm'
+  setInputValue(selectors.selectedFarm, `${displayFarm} (${offer.locationLabel})`)
   populateScheduleOptions(offer)
   enableForm()
   setFormFeedback('')
@@ -138,7 +140,7 @@ function renderOffers(offers) {
     const row = document.createElement('tr')
 
     const farmCell = document.createElement('td')
-    farmCell.textContent = `Farm #${offer.farmId}`
+    farmCell.textContent = offer.farmName || 'Farm partner'
 
     const locationCell = document.createElement('td')
     locationCell.textContent = offer.locationLabel

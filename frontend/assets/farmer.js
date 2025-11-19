@@ -230,7 +230,13 @@ async function submitReportForm(event) {
     setFeedback('reports', 'Select a start and end date.', false)
     return
   }
+  const reportId = state.reports.activeReportId || (state.reports.catalog[0]?.id ?? null)
+  if (!reportId) {
+    setFeedback('reports', 'Select a report to generate.', false)
+    return
+  }
   const payload = {
+    reportId,
     startDateFrom: fromValue,
     startDateTo: toValue
   }

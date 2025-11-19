@@ -133,6 +133,7 @@ async function getFarmRecord(farmId: number) {
     .select(
       'f.farm_id',
       'f.location_id',
+      'f.name as farm_name',
       'loc.street',
       'loc.city',
       'loc.state',
