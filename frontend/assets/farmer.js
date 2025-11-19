@@ -47,6 +47,11 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
   currency: 'PHP'
 })
 
+const weightFormatter = new Intl.NumberFormat('en-PH', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+})
+
 function $(selector) {
   return document.querySelector(selector)
 }
@@ -55,6 +60,12 @@ function formatCurrency(value) {
   const number = Number(value)
   if (Number.isNaN(number)) return '—'
   return currencyFormatter.format(number)
+}
+
+function formatUnitWeight(value, fallback = 'Weight TBD') {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return fallback
+  return `${weightFormatter.format(number)} kg/unit`
 }
 
 function formatDateOnly(date) {
@@ -361,7 +372,8 @@ function renderOrders() {
     header.className = 'management-item__header'
     header.innerHTML = `<div><strong>Order #${order.orderId}</strong><br>${order.productName || 'Product'} · ${order.clientLabel || ''}</div>`
     const amount = document.createElement('div')
-    amount.innerHTML = `<small>Quantity</small><p><strong>${order.quantity}</strong></p>`
+    const weightLabel = formatUnitWeight(order.unitWeight)
+    amount.innerHTML = `<small>Quantity</small><p><strong>${order.quantity}</strong><br><span class="muted">${weightLabel}</span></p>`
     header.appendChild(amount)
 
     const info = document.createElement('p')
@@ -398,7 +410,8 @@ function renderShipments() {
   }
   shipped.forEach((order) => {
     const li = document.createElement('li')
-    li.textContent = `#${order.orderId} · ${order.productName || 'Product'} · ${order.quantity} units · ${formatDate(order.orderDate)}`
+    const weightLabel = formatUnitWeight(order.unitWeight)
+    li.textContent = `#${order.orderId} · ${order.productName || 'Product'} · ${order.quantity} units (${weightLabel}) · ${formatDate(order.orderDate)}`
     list.appendChild(li)
   })
 }
@@ -617,6 +630,14 @@ function renderOfferings() {
     popInput.setAttribute('data-offering-population', '')
     populationCell.appendChild(popInput)
 
+    const unitCell = document.createElement('td')
+    const unitInput = document.createElement('input')
+    unitInput.type = 'text'
+    unitInput.placeholder = 'e.g. trees'
+    unitInput.value = offering.populationUnit || ''
+    unitInput.setAttribute('data-offering-population-unit', '')
+    unitCell.appendChild(unitInput)
+
     const actionCell = document.createElement('td')
     const saveBtn = document.createElement('button')
     saveBtn.type = 'button'
@@ -633,6 +654,7 @@ function renderOfferings() {
 
     row.appendChild(infoCell)
     row.appendChild(populationCell)
+    row.appendChild(unitCell)
     row.appendChild(actionCell)
     tbody.appendChild(row)
   })
@@ -954,15 +976,20 @@ async function submitOfferingForm(event) {
   const form = event.currentTarget
   const productId = Number($(selectors.offeringProductSelect)?.value)
   const population = Number(form.population.value)
+  const populationUnit = form.populationUnit.value?.trim()
   if (!productId) {
     setFeedback('offerings', 'Select a product before adding an offering.', false)
+    return
+  }
+  if (!populationUnit) {
+    setFeedback('offerings', 'Enter a population unit.', false)
     return
   }
   try {
     setFeedback('offerings', 'Adding offering…', true)
     await fetchJson(OFFERINGS_ENDPOINT, {
       method: 'POST',
-      body: JSON.stringify({ productId, population })
+      body: JSON.stringify({ productId, population, populationUnit })
     })
     form.reset()
     setFeedback('offerings', 'Offering added.', true)
@@ -981,15 +1008,21 @@ async function handleOfferingTableClick(event) {
   if (!productId) return
   if (button.dataset.action === 'update-offering') {
     const popInput = row.querySelector('[data-offering-population]')
+    const unitInput = row.querySelector('[data-offering-population-unit]')
     const population = Number(popInput?.value)
+    const populationUnit = unitInput?.value?.trim()
     if (Number.isNaN(population) || population < 0) {
       setFeedback('offerings', 'Enter a valid population.', false)
+      return
+    }
+    if (!populationUnit) {
+      setFeedback('offerings', 'Enter a population unit.', false)
       return
     }
     try {
       await fetchJson(`${OFFERINGS_ENDPOINT}/${productId}`, {
         method: 'PUT',
-        body: JSON.stringify({ population })
+        body: JSON.stringify({ population, populationUnit })
       })
       setFeedback('offerings', 'Offering updated.', true)
       await loadDashboard()

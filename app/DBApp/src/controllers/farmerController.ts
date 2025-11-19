@@ -58,6 +58,7 @@ function farmerOrderDetailQuery() {
       'inv.farm_id',
       'inv.product_id',
       'inv.price as unit_price',
+      'inv.weight as unit_weight',
       'inv.notes',
       'rp.product_name',
       'loc.street as ship_street',
@@ -151,6 +152,7 @@ async function fetchFarmerDashboardData(farmId: number) {
       'fp.product_id',
       'fp.farm_id',
       'fp.population',
+      'fp.population_unit',
       'rp.product_name',
       'rp.product_type',
       'rp.grade'
@@ -625,12 +627,17 @@ export async function handleFarmerOfferingsCreate(request: IncomingMessage, resp
     const body = await readBody<any>(request)
     const productId = Number(body.productId)
     const population = Number(body.population || 0)
+    const populationUnit = typeof body.populationUnit === 'string' ? body.populationUnit.trim() : ''
     if (!productId || Number.isNaN(productId)) {
       sendJson(response, 400, { error: 'Select a product to add.' })
       return
     }
     if (Number.isNaN(population) || population < 0) {
       sendJson(response, 400, { error: 'Population must be zero or greater.' })
+      return
+    }
+    if (!populationUnit) {
+      sendJson(response, 400, { error: 'Specify a population unit.' })
       return
     }
     const product = await knex('RawProduct').where('product_id', productId).first()
@@ -642,7 +649,8 @@ export async function handleFarmerOfferingsCreate(request: IncomingMessage, resp
       await knex('FarmProduct').insert({
         product_id: productId,
         farm_id: farmId,
-        population
+        population,
+        population_unit: populationUnit
       })
     } catch (error: any) {
       if (error.code === 'ER_DUP_ENTRY') {
@@ -657,6 +665,7 @@ export async function handleFarmerOfferingsCreate(request: IncomingMessage, resp
         'fp.product_id',
         'fp.farm_id',
         'fp.population',
+        'fp.population_unit',
         'rp.product_name',
         'rp.product_type',
         'rp.grade'
@@ -684,14 +693,30 @@ export async function handleFarmerOfferingsUpdate(request: IncomingMessage, resp
   }
   try {
     const body = await readBody<any>(request)
-    const population = Number(body.population)
-    if (Number.isNaN(population) || population < 0) {
-      sendJson(response, 400, { error: 'Population must be zero or greater.' })
+    const updates: Record<string, any> = {}
+    if (body.population !== undefined) {
+      const population = Number(body.population)
+      if (Number.isNaN(population) || population < 0) {
+        sendJson(response, 400, { error: 'Population must be zero or greater.' })
+        return
+      }
+      updates.population = population
+    }
+    if (body.populationUnit !== undefined) {
+      const populationUnit = typeof body.populationUnit === 'string' ? body.populationUnit.trim() : ''
+      if (!populationUnit) {
+        sendJson(response, 400, { error: 'Specify a population unit.' })
+        return
+      }
+      updates.population_unit = populationUnit
+    }
+    if (!Object.keys(updates).length) {
+      sendJson(response, 400, { error: 'No offering fields provided.' })
       return
     }
     const affected = await knex('FarmProduct')
       .where({ product_id: productId, farm_id: farmId })
-      .update({ population })
+      .update(updates)
     if (!affected) {
       sendJson(response, 404, { error: 'Offering not found.' })
       return
@@ -702,6 +727,7 @@ export async function handleFarmerOfferingsUpdate(request: IncomingMessage, resp
         'fp.product_id',
         'fp.farm_id',
         'fp.population',
+        'fp.population_unit',
         'rp.product_name',
         'rp.product_type',
         'rp.grade'

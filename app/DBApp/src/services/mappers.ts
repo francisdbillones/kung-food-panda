@@ -4,6 +4,7 @@ import { formatLocationLabel } from '../lib/locations'
 export function mapOrderRow(row: any) {
   const quantity = Number(row.quantity) || 0
   const unitPrice = row.unit_price == null ? null : Number(row.unit_price)
+  const unitWeight = row.unit_weight == null ? null : Number(row.unit_weight)
   const loyaltyDiscount = Number(row.loyalty_points_used) || 0
   const grossAmount = unitPrice == null ? null : Number((unitPrice * quantity).toFixed(2))
   const totalAmount = grossAmount == null
@@ -38,7 +39,8 @@ export function mapOrderRow(row: any) {
     statusVariant,
     farmId: row.farm_id || null,
     farmName: row.farm_name || null,
-    productGrade: row.grade || null
+    productGrade: row.grade || null,
+    unitWeight
   }
 }
 
@@ -46,6 +48,7 @@ export function mapSubscriptionRow(row: any) {
   const intervalDays = Number(row.order_interval_days) || null
   const nextDelivery = computeNextDeliveryDate(row.start_date, intervalDays)
   const locationParts = [row.city, row.state, row.country].filter(Boolean)
+  const unitWeight = row.unit_weight != null ? Number(row.unit_weight) : null
   return {
     programId: row.program_id,
     productId: row.product_id,
@@ -59,7 +62,8 @@ export function mapSubscriptionRow(row: any) {
     nextDeliveryDate: nextDelivery ? toISODate(nextDelivery) : null,
     locationLabel: locationParts.join(', ') || null,
     price: row.price != null ? Number(row.price) : null,
-    status: row.status || 'AWAITING_QUOTE'
+    status: row.status || 'AWAITING_QUOTE',
+    unitWeight
   }
 }
 
@@ -150,6 +154,7 @@ export function mapFarmRow(row: any) {
 export function mapFarmerOrderRow(row: any) {
   const quantity = Number(row.quantity) || 0
   const unitPrice = row.unit_price != null ? Number(row.unit_price) : null
+  const unitWeight = row.unit_weight != null ? Number(row.unit_weight) : null
   const totalAmount = unitPrice != null ? Number((unitPrice * quantity).toFixed(2)) : null
   const nameParts = [row.client_first_name, row.client_last_name].filter(Boolean)
   const clientName = nameParts.join(' ').trim()
@@ -177,7 +182,8 @@ export function mapFarmerOrderRow(row: any) {
     status: row.shipped_date ? 'Shipped' : 'Pending',
     clientLabel,
     shipTo,
-    notes: row.notes || null
+    notes: row.notes || null,
+    unitWeight
   }
 }
 
@@ -210,7 +216,8 @@ export function mapFarmOfferingRow(row: any) {
     productName: row.product_name,
     productType: row.product_type,
     grade: row.grade,
-    population: Number(row.population) || 0
+    population: Number(row.population) || 0,
+    populationUnit: row.population_unit || ''
   }
 }
 

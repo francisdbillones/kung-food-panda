@@ -1,11 +1,17 @@
 import knex from '../models/knexfile'
 import { httpError } from '../lib/errors'
 
+export interface AdminFieldOption {
+  label: string
+  value: string | number
+}
+
 export interface AdminFieldConfig {
   column: string
   label: string
   type: 'number' | 'text' | 'date'
   readOnly?: boolean
+  options?: AdminFieldOption[]
 }
 
 export interface AdminEntityConfig {
@@ -29,7 +35,18 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'company_name', label: 'Company Name', type: 'text' },
       { column: 'first_name', label: 'First Name', type: 'text' },
       { column: 'last_name', label: 'Last Name', type: 'text' },
-      { column: 'honorific', label: 'Honorific', type: 'text' },
+      {
+        column: 'honorific',
+        label: 'Honorific',
+        type: 'text',
+        options: [
+          { label: 'Mx.', value: 'Mx.' },
+          { label: 'Mr.', value: 'Mr.' },
+          { label: 'Mrs.', value: 'Mrs.' },
+          { label: 'Ms.', value: 'Ms.' },
+          { label: 'Dr.', value: 'Dr.' }
+        ]
+      },
       { column: 'email', label: 'Email', type: 'text' },
       { column: 'location_id', label: 'Location ID', type: 'number' },
       { column: 'loyalty_points', label: 'Loyalty Points', type: 'number' }
@@ -72,7 +89,18 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'product_id', label: 'Product ID', type: 'number' },
       { column: 'product_name', label: 'Product Name', type: 'text' },
       { column: 'product_type', label: 'Type', type: 'text' },
-      { column: 'grade', label: 'Grade', type: 'text' },
+      {
+        column: 'grade',
+        label: 'Grade',
+        type: 'text',
+        options: [
+          { label: 'SSR', value: 'SSR' },
+          { label: 'SR', value: 'SR' },
+          { label: 'R', value: 'R' },
+          { label: 'UC', value: 'UC' },
+          { label: 'C', value: 'C' }
+        ]
+      },
       { column: 'start_season', label: 'Season Start', type: 'date' },
       { column: 'end_season', label: 'Season End', type: 'date' }
     ],
@@ -128,7 +156,17 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
       { column: 'quantity', label: 'Quantity', type: 'number' },
       { column: 'location_id', label: 'Location ID', type: 'number' },
       { column: 'price', label: 'Price', type: 'number' },
-      { column: 'status', label: 'Status', type: 'text' }
+      {
+        column: 'status',
+        label: 'Status',
+        type: 'text',
+        options: [
+          { label: 'Awaiting Quote', value: 'AWAITING_QUOTE' },
+          { label: 'Quoted', value: 'QUOTED' },
+          { label: 'Active', value: 'ACTIVE' },
+          { label: 'Cancelled', value: 'CANCELLED' }
+        ]
+      }
     ],
     defaultSort: ['program_id', 'desc']
   },
