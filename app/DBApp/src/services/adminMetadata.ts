@@ -43,6 +43,7 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
     autoIncrement: false,
     fields: [
       { column: 'farm_id', label: 'Farm ID', type: 'number' },
+      { column: 'name', label: 'Farm Name', type: 'text' },
       { column: 'location_id', label: 'Location ID', type: 'number' }
     ],
     defaultSort: ['farm_id', 'asc']
@@ -139,7 +140,8 @@ const ADMIN_ENTITIES: Record<string, Omit<AdminEntityConfig, 'key'>> = {
     fields: [
       { column: 'product_id', label: 'Product ID', type: 'number' },
       { column: 'farm_id', label: 'Farm ID', type: 'number' },
-      { column: 'population', label: 'Population', type: 'number' }
+      { column: 'population', label: 'Population', type: 'number' },
+      { column: 'population_unit', label: 'Population Unit', type: 'text' }
     ],
     defaultSort: ['product_id', 'asc']
   }
