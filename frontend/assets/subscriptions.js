@@ -39,6 +39,11 @@ const dateFormatter = new Intl.DateTimeFormat('en-PH', {
   day: 'numeric'
 })
 
+const weightFormatter = new Intl.NumberFormat('en-PH', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+})
+
 function $(selector) {
   return document.querySelector(selector)
 }
@@ -60,6 +65,12 @@ function formatDate(value) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   return dateFormatter.format(date)
+}
+
+function formatUnitWeight(value, fallback = 'Weight TBD') {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return fallback
+  return `${weightFormatter.format(number)} kg/unit`
 }
 
 function isCancellable(subscription) {
@@ -95,6 +106,9 @@ function renderRequests(subscriptions) {
     const quantityCell = document.createElement('td')
     quantityCell.textContent = sub.quantity
 
+    const weightCell = document.createElement('td')
+    weightCell.textContent = formatUnitWeight(sub.unitWeight)
+
     const statusCell = document.createElement('td')
     const status = document.createElement('span')
     const variant = statusVariant[sub.status] || ''
@@ -124,6 +138,7 @@ function renderRequests(subscriptions) {
     row.appendChild(farmCell)
     row.appendChild(cadenceCell)
     row.appendChild(quantityCell)
+    row.appendChild(weightCell)
     row.appendChild(statusCell)
     row.appendChild(priceCell)
     row.appendChild(nextCell)

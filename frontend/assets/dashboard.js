@@ -20,6 +20,11 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
   currency: 'PHP'
 })
 
+const weightFormatter = new Intl.NumberFormat('en-PH', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+})
+
 const dateFormatter = new Intl.DateTimeFormat('en-PH', {
   month: 'short',
   day: 'numeric'
@@ -48,6 +53,11 @@ function formatDate(value, fallback = '—') {
   return dateFormatter.format(date)
 }
 
+function formatUnitWeight(value, fallback = '—') {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return fallback
+  return `${weightFormatter.format(number)} kg/unit`
+}
 
 function pluralize(count, singular) {
   return `${count} ${count === 1 ? singular : `${singular}s`}`
@@ -145,6 +155,7 @@ function renderPendingOrders(orders) {
         value: order.productGrade ? `Grade ${order.productGrade}` : order.productName || '—',
         entries: [
           { label: 'Farm', value: order.farmName || '—' },
+          { label: 'Unit weight', value: order.unitWeight != null ? formatUnitWeight(order.unitWeight) : 'Weight TBD' },
           { label: 'Loyalty used', value: order.loyaltyDiscount ? `${order.loyaltyDiscount} pts` : '—' }
         ]
       }
@@ -251,7 +262,8 @@ function renderRecentOrders(orders) {
     const dateCell = document.createElement('td')
     dateCell.textContent = formatDate(order.orderDate)
     const actionCell = document.createElement('td')
-    actionCell.textContent = `Order #${order.orderId} · ${order.productName}`
+    const weightLabel = order.unitWeight != null ? ` (${formatUnitWeight(order.unitWeight)})` : ''
+    actionCell.textContent = `Order #${order.orderId} · ${order.productName}${weightLabel}`
     const amountCell = document.createElement('td')
     amountCell.textContent = order.totalAmount != null ? formatCurrency(order.totalAmount) : '—'
     const statusCell = document.createElement('td')

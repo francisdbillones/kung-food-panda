@@ -28,6 +28,11 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
   currency: 'PHP'
 })
 
+const weightFormatter = new Intl.NumberFormat('en-PH', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+})
+
 const state = {
   batch: null,
   loyaltyPoints: 0,
@@ -53,6 +58,12 @@ function setAlert(message, isSuccess = false) {
 
 function formatCurrency(value) {
   return currencyFormatter.format(Number(value) || 0)
+}
+
+function formatUnitWeight(value, fallback = 'Weight TBD') {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return fallback
+  return `${weightFormatter.format(number)} kg/unit`
 }
 
 function setLocationMode(mode) {
@@ -102,6 +113,7 @@ function populateBatchDetails(batch, profile, location) {
   setText('[data-batch-farm]', `#${batch.farmId}`)
   setText('[data-batch-location]', batch.farmLocation || 'Location TBD')
   setText('[data-batch-price]', formatCurrency(batch.price))
+  setText('[data-batch-weight]', formatUnitWeight(batch.weight))
   setText('[data-batch-available]', batch.quantity)
   setText('[data-batch-exp]', batch.expDate || '—')
   setText(selectors.defaultLocation, state.defaultLocation?.label || 'No default location set')
@@ -111,7 +123,7 @@ function populateBatchDetails(batch, profile, location) {
     quantityInput.value = Math.min(batch.quantity, Number(quantityInput.value) || 1)
   }
   const hint = $(selectors.quantityHint)
-  if (hint) hint.textContent = `Up to ${batch.quantity} units available.`
+  if (hint) hint.textContent = `Up to ${batch.quantity} units available (${formatUnitWeight(batch.weight)}).`
   const loyaltyInput = $(selectors.loyaltyInput)
   if (loyaltyInput) loyaltyInput.value = '0'
   updateSummary()
