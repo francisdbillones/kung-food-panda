@@ -2,26 +2,29 @@
 USE kungfoodpanda_db;
 
 INSERT INTO Location (location_id, continent, country, state, city, street) VALUES
-  (1, 'Asia', 'Philippines', 'Metro Manila', 'City 1', '1 Taft Avenue'),
-  (2, 'Asia', 'Philippines', 'Metro Manila', 'City 2', '2 Taft Avenue'),
-  (3, 'Asia', 'Philippines', 'Metro Manila', 'City 3', '3 Taft Avenue'),
-  (4, 'Asia', 'Philippines', 'Metro Manila', 'City 4', '4 Taft Avenue'),
-  (5, 'Asia', 'Philippines', 'Metro Manila', 'City 5', '5 Taft Avenue'),
-  (6, 'Asia', 'Philippines', 'Metro Manila', 'City 6', '6 Taft Avenue'),
-  (7, 'Asia', 'Philippines', 'Metro Manila', 'City 7', '7 Taft Avenue'),
-  (8, 'Asia', 'Philippines', 'Metro Manila', 'City 8', '8 Taft Avenue'),
-  (9, 'Asia', 'Philippines', 'Metro Manila', 'City 9', '9 Taft Avenue'),
-  (10, 'Asia', 'Philippines', 'Metro Manila', 'City 10', '10 Taft Avenue');
+  (1, 'Asia', 'Philippines', 'Metro Manila', 'Manila', '1 Taft Avenue'),
+  (2, 'Asia', 'China', 'Zhejiang', 'Hangzhou', 'Hefang Old Street'),
+  (3, 'Europe', 'Latvia', 'Zemgale', 'Bauska', 'Harmonijas iela'),
+  (4, 'Asia', 'Philippines', 'Laguna', 'Cabuyao City', '12 JP Rizal St.'),
+  (5, 'North America', 'United States of America', 'New York', 'Manhattan', 'West 143rd Street'),
+  (6, 'Oceania', 'Australia', 'New South Wales', 'Sydney', '483 George Street'),
+  (7, 'Europe', 'Germany', 'Bavaria', 'Munich', '8 Marienplatz'),
+  (8, 'South America', 'Argentina', 'Buenos Aires', 'Buenos Aires', '1040  Avenida de Mayo'),
+  (9, 'Africa', 'South Africa', 'Western Cape', 'Cape Town', '50 Long Street'),
+  (10, 'North America', 'Canada', 'Ontario', 'Toronto', '300 Yonge Street');
 
 INSERT INTO RawProduct (product_id, product_name, product_type, grade, start_season, end_season) VALUES
   (1, 'Huitla', 'Fungus', 'SSR', '2025-01-01', '2025-12-31'),
-  (2, 'Moss', 'Seaweed', 'SR', '2025-01-01', '2025-12-31'),
-  (3, 'F.Limes', 'Fruit', 'R', '2025-01-01', '2025-12-31'),
-  (4, 'Chapul', 'Insect', 'UC', '2025-01-01', '2025-12-31'),
-  (5, 'Doenjang', 'Fermented', 'C', '2025-01-01', '2025-12-31'),
+  (2, 'Moss', 'Seaweed', 'SR', '2025-03-01', '2025-07-31'),
+  (3, 'F.Limes', 'Fruit', 'R', '2025-01-01', '2025-03-31'),
+  (4, 'Chapuul', 'Insect', 'UC', '2025-09-01', '2025-12-31'),
+  (5, 'Doenjang', 'Fermented', 'C', '2025-08-01', '2025-12-31'),
   (6, 'Bottarga', 'Animal Product', 'SSR', '2025-01-01', '2025-12-31'),
-  (7, 'Oca', 'Root Vegetable', 'SR', '2025-01-01', '2025-12-31'),
-  (8, 'Onit', 'Floral', 'R', '2025-01-01', '2025-12-31');
+  (7, 'Ocka', 'Root Vegetable', 'SR', '2025-01-01', '2025-12-31'),
+  (8, 'Yonit', 'Floral', 'R', '2025-01-01', '2025-12-31'),
+  (9, 'Poaté', 'Root Vegetable', 'SSR', '2025-04-01', '2025-08-01'),
+  (10, 'Coöc', 'Seed', 'R', '2025-06-01', '2025-10-01');
+  
 
 INSERT INTO Client (client_id, company_name, first_name, last_name, honorific, email, location_id, loyalty_points) VALUES
   (1, 'Foodies Inc.', 'Alice', 'Smith', 'Ms.', 'alice.smith@foodies.com', 1, 327),
